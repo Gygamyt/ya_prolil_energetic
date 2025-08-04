@@ -1,11 +1,13 @@
-import { google, sheets_v4 } from 'googleapis';
-import { getAuth } from './auth';
+import { google } from 'googleapis';
+import { getAuth } from './auth.ts';
+import { env } from "./utils/env.ts";
 
-export async function readSheet(range: string): Promise<sheets_v4.Schema$ValueRange> {
+export async function readSheet(range: string, spreadsheetId: string = env.GOOGLE_SHEET_ID!) {
     const auth = getAuth();
+    console.log(getAuth());
     const sheets = google.sheets({ version: 'v4', auth });
     const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID!,
+        spreadsheetId,
         range,
     });
     return response.data;
