@@ -1,7 +1,7 @@
 import { google, sheets_v4 } from "googleapis";
 import { getAuth } from "./auth.ts";
 import { env } from "../utils/env.ts";
-import { RawRecordSchema } from "../zod/employee.schema.ts";
+import { RawRecordSchema } from "../zod-helper/employee.schema.ts";
 
 /**
  * Reads any arbitrary range from a sheet.

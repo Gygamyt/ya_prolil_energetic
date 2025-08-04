@@ -75,13 +75,25 @@ export const RowSchema = z.object({
     "На бенч": z.string(),
 });
 
-
-export type Row = z.infer<typeof RowSchema>;
-export type RecordTuple = z.infer<typeof RawRecordSchema>;
-export type RecordObject = {
-    [Index in keyof RecordTuple]: RecordTuple[Index] extends boolean
-        ? boolean
-        : RecordTuple[Index] extends string
-            ? string
-            : never;
-};
+export const cleanEmployeeObjectSchema = z.object({
+    'Уровень': Grade,
+    'ФИО': z.string(),
+    'JS, TS': SkillLevel,
+    'Java': SkillLevel,
+    'Python': SkillLevel,
+    'C#': SkillLevel,
+    'Kotlin': SkillLevel,
+    'Ruby': SkillLevel,
+    'Swift': SkillLevel,
+    'Performance': SkillLevel,
+    'Security': SkillLevel,
+    'Accessibility': SkillLevel,
+    'Role': Role,
+    'Testing Framework': z.string(),
+    'English': CEFRLevel,
+    'German': CEFRLevel,
+    'Polish': CEFRLevel,
+    'Страна': z.string(),
+    'Город': z.string(),
+    'Team Lead': z.string(),
+});
