@@ -1,13 +1,12 @@
-import 'dotenv/config';
-import { readSheet } from '../src/sheets.ts';
-import { env } from "../src/utils/env.ts";
+import "dotenv/config";
+import { readUntilStop } from "../src/sheets.ts";
 
 async function main() {
     try {
-        const sheetData = await readSheet('AQA Benchinfo', env.GOOGLE_SHEET_ID);
-        console.log(JSON.stringify(sheetData.values, null, 2));
+        const rows = await readUntilStop("AQA Benchinfo");
+        console.log(JSON.stringify(rows, null, 2));
     } catch (err) {
-        console.error('Error reading sheet:', err);
+        console.error("Error reading sheet:", err);
     }
 }
 
