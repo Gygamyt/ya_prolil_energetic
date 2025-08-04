@@ -117,13 +117,7 @@ logs
 *.db
 *.sqlite
 
-# AI/ML models (if storing locally)
-models/
-*.h5
-*.pkl
-*.model
-
-# Google credentials (important for security)
+# Google credentials
 credentials.json
 service-account-key.json
 *.p12

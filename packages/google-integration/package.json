@@ -22,16 +22,18 @@
   },
   "dependencies": {
     "@repo/shared": "file:../packages/shared",
-    "googleapis": "^129.0.0",
     "google-auth-library": "^9.4.1",
+    "googleapis": "^129.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@repo/eslint-config": "file:../packages/eslint-config",
     "@repo/tsconfig": "file:../packages/tsconfig",
+    "@types/nock": "^10.0.3",
     "@types/xlsx": "^0.0.36",
+    "nock": "^14.0.8",
     "tsup": "^8.0.1",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.4"
+    "vitest": "^1.6.1"
   }
 }

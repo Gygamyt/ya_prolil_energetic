@@ -22,15 +22,12 @@
   },
   "dependencies": {
     "@repo/shared": "file:../packages/shared",
-    "@tensorflow/tfjs": "^4.15.0",
-    "@tensorflow/tfjs-node": "^4.15.0",
-    "brain.js": "^2.0.0-beta.23",
-    "sharp": "^0.33.1"
+    "axios": "^1.4.0",
+    "dotenv": "^16.1.4"
   },
   "devDependencies": {
     "@repo/eslint-config": "file:../packages/eslint-config",
     "@repo/tsconfig": "file:../packages/tsconfig",
-    "@types/sharp": "^0.32.0",
     "tsup": "^8.0.1",
     "typescript": "^5.3.0",
     "vitest": "^1.0.4"
