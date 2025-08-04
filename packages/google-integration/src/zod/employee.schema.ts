@@ -3,16 +3,16 @@ import { z } from "zod";
 const NullableFlag = z
     .enum(["TRUE", "FALSE", ""])
     .transform(v => v === "TRUE");
-const Grade = z.enum(["Intern", "Junior", "Middle", "Senior", "", "No"]);
-const SkillLevel = z.enum(["Low", "Medium", "High", "", "No", "On check"]);
+const Grade = z.enum(["Intern", "Junior", "Middle", "Senior", "No"]);
+const SkillLevel = z.enum(["Low", "Medium", "High", "No", "On check"]);
 const OptionalString = z.string().optional();
 const BooleanString = z
     .enum(["Yes", "No", ""])
     .transform(v => v === "Yes");
-const Role = z.enum(["AQA", "Fullstack", ""]);
-const CEFRLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2", "", "No"]);
+const Role = z.enum(["AQA", "Fullstack"]);
+const CEFRLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2", "No"]);
 
-export const RecordSchema = z.tuple([
+export const RawRecordSchema = z.tuple([
     NullableFlag,        // 0: TRUE/FALSE/""
     Grade,               // 1: grade
     z.string(),          // 2: name
@@ -77,7 +77,7 @@ export const RowSchema = z.object({
 
 
 export type Row = z.infer<typeof RowSchema>;
-export type RecordTuple = z.infer<typeof RecordSchema>;
+export type RecordTuple = z.infer<typeof RawRecordSchema>;
 export type RecordObject = {
     [Index in keyof RecordTuple]: RecordTuple[Index] extends boolean
         ? boolean
