@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { GoogleAuth } from 'google-auth-library';
-import { getAuth } from '../auth';
+import { getAuth } from '../auth.ts';
 
 describe('getAuth()', () => {
     it('should return an instance of GoogleAuth', () => {

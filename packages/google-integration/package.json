@@ -20,7 +20,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "clean": "rm -rf dist",
-    "test:sheet": "node -r ts-node/register scripts/testReadSheet.ts"
+    "test:sheet": "node -r ts-node/register src/scripts/testReadSheet.ts"
   },
   "dependencies": {
     "@repo/shared": "file:../shared",

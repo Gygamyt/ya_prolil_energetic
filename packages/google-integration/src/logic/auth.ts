@@ -1,5 +1,5 @@
 import { GoogleAuth } from "google-auth-library";
-import { env } from "./utils/env.ts";
+import { env } from "../utils/env.ts";
 
 export function getAuth() {
     return new GoogleAuth({

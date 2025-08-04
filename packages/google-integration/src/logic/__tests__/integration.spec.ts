@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { google } from 'googleapis';
-import { getAuth } from '../auth';
-import { readSheet } from '../sheets';
-import { downloadFile } from '../drive';
+import { getAuth } from '../auth.ts';
+import { readSheet } from '../sheets.ts';
+import { downloadFile } from '../drive.ts';
 import * as XLSX from 'xlsx';
 
 vi.mock('../auth', () => ({
