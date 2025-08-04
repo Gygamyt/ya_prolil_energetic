@@ -18,6 +18,35 @@ export async function readSheet(
     return response.data;
 }
 
+export async function readAndTrim(
+    sheetName: string,
+    spreadsheetId: string = env.GOOGLE_SHEET_ID
+): Promise<string[][]> {
+    const auth = getAuth();
+    const sheets = google.sheets({ version: "v4", auth });
+
+    const res = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${sheetName}!A1:Z1000`,
+        majorDimension: "ROWS",
+        valueRenderOption: "FORMATTED_VALUE",
+    });
+    const allRows = res.data.values || [];
+
+    let top = 0, bottom = allRows.length - 1;
+    while (top <= bottom && allRows[top].every(cell => !cell?.toString().trim())) top++;
+    while (bottom >= top && allRows[bottom].every(cell => !cell?.toString().trim())) bottom--;
+    const trimmedRows = allRows.slice(top, bottom + 1);
+
+    if (!trimmedRows.length) return [];
+    const colCount = trimmedRows[0].length;
+    let left = 0, right = colCount - 1;
+    while (left <= right && trimmedRows.every(row => !row[left]?.toString().trim())) left++;
+    while (right >= left && trimmedRows.every(row => !row[right]?.toString().trim())) right--;
+    return trimmedRows.map(row => row.slice(left, right + 1));
+}
+
+
 /**
  * Это чучело дохнет по причине того, что таблица специфично сделана, а я ленивый, но оставить надо
  * Reads an entire sheet but trims off trailing empty columns.
@@ -46,6 +75,7 @@ export async function readSheetSmart(
     if (lastIdx < 0) {
         return [];
     }
+
     function colLetter(idx: number): string {
         let s = "";
         while (idx >= 0) {
@@ -54,6 +84,7 @@ export async function readSheetSmart(
         }
         return s;
     }
+
     const lastCol = colLetter(lastIdx);
     const range = `${sheetName}!A1:${lastCol}`;
     const fullRes = await sheets.spreadsheets.values.get({
@@ -63,70 +94,4 @@ export async function readSheetSmart(
         valueRenderOption: "FORMATTED_VALUE",
     });
     return fullRes.data.values || [];
-}
-
-/**
- * Reads rows from a sheet up to the first occurrence of "stop" in column A,
- * then trims trailing empty cells on each row.
- *
- * @param sheetName – e.g. "AQA Benchinfo"
- * @param spreadsheetId – defaults to env.GOOGLE_SHEET_ID
- * @returns array of rows (each an array of strings), excluding the "stop" row
- */
-export async function readUntilStop(
-    sheetName: string,
-    spreadsheetId: string = env.GOOGLE_SHEET_ID
-): Promise<string[][]> {
-    console.log(`readUntilStop: sheet="${sheetName}"`);
-
-    const auth = getAuth();
-    const sheets = google.sheets({ version: "v4", auth });
-
-    // 1) Find stop row in column A
-    const colARes = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: `${sheetName}!A:A`,
-        majorDimension: "COLUMNS",
-    });
-    const colA = colARes.data.values?.[0]?.map((v) => (v || "").toString().toLowerCase()) || [];
-    console.log("Column A preview:", colA.slice(0, 20));
-
-    const stopIdx = colA.findIndex((cell) => cell === "stop");
-    const endRow = stopIdx >= 0 ? stopIdx : colA.length;
-    if (endRow <= 1) {
-        console.log("No data before stop; returning []");
-        return [];
-    }
-
-    // 2) Fetch all columns A:Z (or adjust Z to expected max)
-    const dataRes = await sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: `${sheetName}!A1:Z${endRow - 1}`,
-        majorDimension: "ROWS",
-        valueRenderOption: "FORMATTED_VALUE",
-    });
-    const rows = dataRes.data.values || [];
-    console.log(`Fetched ${rows.length} rows and up to ${rows[0]?.length || 0} columns`);
-
-    // 3) Trim trailing empty cells on each row
-    const trimmed = rows.map((row) => {
-        let last = row.length - 1;
-        while (last >= 0 && (!row[last] || row[last].toString().trim() === "")) {
-            last--;
-        }
-        return row.slice(0, last + 1);
-    });
-
-    console.log("Trimmed rows preview:", trimmed.slice(0, 5));
-    return trimmed;
-}
-
-/** Helper: convert 0-based index to column letter (0 → A, 25 → Z, 26 → AA) */
-function colLetter(idx: number): string {
-    let s = "";
-    while (idx >= 0) {
-        s = String.fromCharCode((idx % 26) + 65) + s;
-        idx = Math.floor(idx / 26) - 1;
-    }
-    return s;
 }
