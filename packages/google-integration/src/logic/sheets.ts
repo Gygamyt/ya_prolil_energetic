@@ -200,39 +200,3 @@ export async function readSheetSmart(
     });
     return fullRes.data.values || [];
 }
-
-type SheetRowObject = { [key: string]: string | null };
-
-const HEADERS = [
-    "Языки программирования",
-    "Типы тестирования",
-    "Позиция",
-    "Основной стек",
-    "Язык",
-    "Локация",
-    "M",
-    "Дата выхода",
-    "0",
-    "Уровень",
-    "ФИО",
-    "JS, TS",
-    "Java",
-    "Python",
-    "C#",
-    "Kotlin",
-    "Ruby",
-    "Swift",
-    "Performance",
-    "Security",
-    "Accessibility",
-    "Role",
-    "Testing Framework",
-    "English",
-    "German",
-    "Polish",
-    "Страна",
-    "Город",
-    "Team Lead",
-    "В штат",
-    "На бенч",
-];
