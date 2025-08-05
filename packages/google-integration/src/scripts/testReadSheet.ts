@@ -3,6 +3,8 @@ import { env } from "../utils/env.ts";
 import { removeEmptyNonRequiredInfoFrom2DArray } from "../utils/string.helper.ts";
 import { arrayToObject, objectKeys } from "../types/employee-object.type.ts";
 import { z } from "zod";
+import { GoogleSheetReader } from "../logic/sheets.ts";
+import { logger } from "@repo/logger/src/logger-context.ts";
 
 /**
  * Do not touch this import. Just do not touch.
@@ -15,8 +17,6 @@ import { cleanEmployeeArraySchema } from "../zod-helper/index.ts";
  * preventing 'module not found' errors since types do not exist in JavaScript.
  */
 import type { CleanEmployeeArray } from "../zod-helper";
-import { GoogleSheetReader } from "../logic/sheets.ts";
-import { logger } from "@repo/logger/src/logger-context.ts";
 
 /**
  * @file This module provides functionality to fetch, process, and validate employee data from a Google Sheet.
@@ -55,7 +55,7 @@ export async function fetchAndValidateEmployeeData(): Promise<CleanEmployeeArray
  * It is designed to be executed when the file is run directly.
  * @async
  */
-async function main(){
+async function main() {
     try {
         const cleanData = await fetchAndValidateEmployeeData();
         logger.info("Data successfully validated and ready for use.");

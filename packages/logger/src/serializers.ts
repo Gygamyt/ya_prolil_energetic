@@ -1,4 +1,3 @@
-// serializers.ts
 import { stdSerializers } from 'pino';
 
 export const serializers = {
