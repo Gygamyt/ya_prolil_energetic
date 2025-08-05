@@ -20,7 +20,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "clean": "rm -rf dist",
-    "test:sheet": "node -r ts-node/register src/scripts/testReadSheet.ts"
+    "test:sheet": "tsx src/scripts/testReadSheet.ts"
   },
   "dependencies": {
     "@repo/shared": "file:../shared",
@@ -34,9 +34,7 @@
     "@types/nock": "^10.0.3",
     "@types/xlsx": "^0.0.36",
     "nock": "^14.0.8",
-    "ts-node": "^10.9.2",
     "tsup": "^8.0.1",
-    "typescript": "^5.8.3",
-    "vitest": "^1.6.1"
+    "typescript": "^5.8.3"
   }
 }

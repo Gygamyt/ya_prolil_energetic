@@ -1,9 +1,12 @@
 import "dotenv/config";
-import { readSheetRows, sortRowsByValidation, trimEmptyBorders } from "../logic/sheets.ts";
 import { env } from "../utils/env.ts";
 import { removeEmptyNonRequiredInfoFrom2DArray } from "../utils/string.helper.ts";
 import { arrayToObject, objectKeys } from "../types/employee-object.type.ts";
 import { z } from "zod";
+
+/**
+ * Do not touch this import. Just do not touch.
+ */
 import { cleanEmployeeArraySchema } from "../zod-helper/index.ts";
 
 /**
@@ -11,7 +14,9 @@ import { cleanEmployeeArraySchema } from "../zod-helper/index.ts";
  * The `import type` syntax is used to ensure this import is removed at runtime,
  * preventing 'module not found' errors since types do not exist in JavaScript.
  */
-import type { CleanEmployeeArray } from "../zod-helper/index.ts";
+import type { CleanEmployeeArray } from "../zod-helper";
+import { GoogleSheetReader } from "../logic/sheets.ts";
+import { logger } from "@repo/logger/src/logger-context.ts";
 
 /**
  * @file This module provides functionality to fetch, process, and validate employee data from a Google Sheet.
@@ -35,9 +40,9 @@ import type { CleanEmployeeArray } from "../zod-helper/index.ts";
  * @throws {z.ZodError} Throws a ZodError if the final data fails schema validation.
  */
 export async function fetchAndValidateEmployeeData(): Promise<CleanEmployeeArray> {
-    const sheetRaw = await readSheetRows(env.GOOGLE_SHEET_PAGE_NAME);
-    const trimmedRows = trimEmptyBorders(sheetRaw);
-    const validatedRows = sortRowsByValidation(trimmedRows).validRows;
+    const sheetRaw = await GoogleSheetReader.readSheetRows(env.GOOGLE_SHEET_PAGE_NAME);
+    const trimmedRows = GoogleSheetReader.trimEmptyBorders(sheetRaw);
+    const validatedRows = GoogleSheetReader.sortRowsByValidation(trimmedRows).validRows;
     const cleanedRows = removeEmptyNonRequiredInfoFrom2DArray(validatedRows);
     const objects = cleanedRows.map(row => arrayToObject(objectKeys, row));
 
@@ -50,15 +55,13 @@ export async function fetchAndValidateEmployeeData(): Promise<CleanEmployeeArray
  * It is designed to be executed when the file is run directly.
  * @async
  */
-async function main() {
+async function main(){
     try {
         const cleanData = await fetchAndValidateEmployeeData();
-        console.log("Data successfully validated and ready for use:");
-        console.dir(cleanData);
+        logger.info("Data successfully validated and ready for use.");
     } catch (err) {
-        console.error("Error during data processing:", err);
         if (err instanceof z.ZodError) {
-            console.error("Validation error details:", err.errors);
+            logger.error("Validation zod error details:", err.errors);
         }
     }
 }
