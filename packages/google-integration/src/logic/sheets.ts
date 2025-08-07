@@ -2,7 +2,7 @@ import { google, sheets_v4 } from "googleapis";
 import { getAuth } from "./auth.ts";
 import { env } from "../utils/env.ts";
 import { RawRecordSchema } from "../zod-helper/employee.schema.ts";
-import { logger  } from "@repo/logger/src";
+import { logger } from "@repo/logger/src";
 
 export class GoogleSheetReader {
     /**
@@ -90,33 +90,35 @@ export class GoogleSheetReader {
     public static sortRowsByValidation(rows: string[][]): { validRows: string[][]; invalidRows: string[][]; } {
         const validRows: string[][] = [];
         const invalidRows: string[][] = [];
-        const warnings: string[] = [];
 
         const expectedLen = RawRecordSchema._def.items.length;
+        let hasValidationIssues = false;
 
         rows.forEach((row, idx) => {
+            // Validation check for incorrect number of columns
             if (row.length !== expectedLen) {
-                warnings.push(`Issues for row ${idx}: Row has incorrect number of columns. Expected ${expectedLen}, got ${row.length}.`);
+                const message = `Row has incorrect number of columns. Expected ${expectedLen}, got ${row.length}.`;
+                logger.warn(`Issues for row ${idx}: ${message}`, { rowData: row });
                 invalidRows.push(row);
+                hasValidationIssues = true;
                 return;
             }
 
             const normalized = row.map(cell => cell.trim());
-
             const result = RawRecordSchema.safeParse(normalized);
-            if (!result.success) {
-                warnings.push(`Issues for row ${idx}: ${result.error.issues[0].message}`);
-            }
 
             if (result.success) {
                 validRows.push(row);
             } else {
+                const message = result.error.issues[0].message;
+                logger.warn(`Issues for row ${idx}: ${message}`, { rowData: row });
                 invalidRows.push(row);
+                hasValidationIssues = true;
             }
         });
 
-        if (warnings.length > 0) {
-            logger.warn({ warnings }, "Validation completed with issues, but it's OK if no other validation errors.");
+        if (hasValidationIssues) {
+            logger.warn("Validation completed with issues, but it's OK if no other validation errors.");
         }
 
         return { validRows, invalidRows };

@@ -1,4 +1,5 @@
 import { LoggerFactory } from "./logger-factory.ts";
+import { Logger } from "winston";
 
 export interface LoggingOptions {
     level?: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
@@ -19,7 +20,7 @@ export function LogMethod(options: LoggingOptions = {}) {
         }
 
         const className = target.constructor.name;
-        const logger = LoggerFactory.getInstance().createLogger({
+        const logger: Logger = LoggerFactory.getInstance().createLogger({
             level: options.level || 'info',
             environment: process.env.NODE_ENV as any || 'development',
             service: `${className}.${propertyKey}`
@@ -41,25 +42,27 @@ export function LogMethod(options: LoggingOptions = {}) {
 
             try {
                 if (options.logArgs && !options.logOnError) {
-                    contextLogger[options.level || 'debug']({
-                        args: sanitizedArgs
-                    }, `Entering ${propertyKey}`);
+                    contextLogger.log(
+                        options.level || 'debug',
+                        `Entering ${propertyKey}`,
+                        { args: sanitizedArgs }
+                    );
                 }
 
                 const result = await originalMethod.apply(this, args);
 
                 if (options.logDuration) {
                     const duration = Number(process.hrtime.bigint() - startTime) / 1e6;
-                    contextLogger.info({ duration }, `Exiting ${propertyKey}`);
+                    contextLogger.info(`Exiting ${propertyKey}`, { duration });
                 }
 
                 if (options.logResult && !options.logOnError) {
-                    contextLogger.debug({ result }, `Result of ${propertyKey}`);
+                    contextLogger.debug(`Result of ${propertyKey}`, { result });
                 }
 
                 return result;
             } catch (error) {
-                contextLogger.error({ err: error, args: sanitizedArgs }, `${propertyKey} failed`);
+                contextLogger.error(`${propertyKey} failed`, { err: error, args: sanitizedArgs });
                 throw error;
             }
         };

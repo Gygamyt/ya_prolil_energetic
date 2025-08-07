@@ -14,10 +14,9 @@
     "test:test": "node -r ts-node/register src/Test.ts"
   },
   "dependencies": {
-    "pino": "^8.0.0"
+    "winston": "^3.13.0"
   },
   "devDependencies": {
-    "pino-pretty": "^10.0.0",
     "@repo/eslint-config": "file:../packages/eslint-config",
     "@repo/tsconfig": "file:../packages/tsconfig"
   }

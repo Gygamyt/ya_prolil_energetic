@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { Logger } from "pino";
+import { Logger } from "winston"; // Change from pino to winston
 import { LoggerFactory } from "./logger-factory.ts";
 
 export interface LoggerContext {
@@ -38,6 +38,7 @@ class LoggerContextManager {
         const context = this.asyncLocalStorage.getStore();
 
         if (context) {
+            // Winston's child method
             return this.baseLogger.child({
                 requestId: context.requestId,
                 userId: context.userId,

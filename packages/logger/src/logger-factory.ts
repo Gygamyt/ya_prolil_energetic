@@ -1,5 +1,4 @@
-import pino, { type Logger, type LoggerOptions } from 'pino';
-import { serializers } from "./serializers.ts";
+import winston, { type Logger, type LoggerOptions, format, transports } from 'winston';
 
 export interface LoggerConfig {
     level: string;
@@ -30,48 +29,44 @@ export class LoggerFactory {
 
         const logBindingsEnabled = process.env.LOG_BINDINGS_ENABLED === 'true';
 
-        const pinoOptions: LoggerOptions = {
-            level: config.level || 'info',
-            serializers,
-            formatters: {
-                level: (label) => ({ level: label.toUpperCase() }),
-                bindings: (bindings) => {
-                    if (logBindingsEnabled) {
-                        return {
-                            pid: bindings.pid,
-                            hostname: bindings.hostname,
-                            service: config.service,
-                            version: config.version || '1.0.0',
-                            env: config.environment
-                        };
-                    }
+        const customPrettyFormat = format.printf(info => {
+            const { timestamp, level, message, ...meta } = info;
+            const metaString = Object.keys(meta).length ? ` ${JSON.stringify(meta, null, 2)}` : '';
+            return `${timestamp} [${level.toUpperCase()}] [${config.service}] ${message}${metaString}`;
+        });
 
-                    return {
-                        pid: bindings.pid,
-                        hostname: bindings.hostname
-                    };
-                }
-            },
-            timestamp: pino.stdTimeFunctions.isoTime,
-            redact: config.environment === 'production'
-                ? ['password', 'token', 'apiKey', '*.password', '*.token']
-                : undefined
+        const winstonOptions: LoggerOptions = {
+            level: config.level || 'info',
+            format: format.combine(
+                format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+                format.errors({ stack: true }),
+                // Here, we create a custom format to include service, version, and env
+                format.printf(info => {
+                    const { timestamp, level, message, ...meta } = info;
+                    const bindings = logBindingsEnabled ? {
+                        service: config.service,
+                        version: config.version || '1.0.0',
+                        env: config.environment,
+                    } : {};
+                    const metadata = Object.keys(meta).length ? JSON.stringify(meta) : '';
+                    return `${timestamp} [${level.toUpperCase()}] [${config.service}] ${message} ${metadata}`;
+                })
+            ),
+            transports: [
+                new transports.Console({
+                    // For development, use a pretty format with colors
+                    format: config.environment === 'development'
+                        ? format.combine(
+                            format.colorize(),
+                            format.simple()
+                        )
+                        : format.json() // In production, use JSON
+                })
+            ],
         };
 
-        if (config.environment === 'development') {
-            pinoOptions.transport = {
-                target: 'pino-pretty',
-                options: {
-                    colorize: true,
-                    translateTime: 'yyyy-mm-dd HH:MM:ss',
-                    ignore: 'pid,hostname'
-                }
-            };
-        }
-
-        const logger = pino(pinoOptions);
+        const logger = winston.createLogger(winstonOptions);
         this.loggers.set(key, logger);
-
         return logger;
     }
 }
