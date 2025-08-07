@@ -2,7 +2,7 @@ import { google, sheets_v4 } from "googleapis";
 import { getAuth } from "./auth.ts";
 import { env } from "../utils/env.ts";
 import { RawRecordSchema } from "../zod-helper/employee.schema.ts";
-import { logger } from "@repo/logger/src";
+import { logger, LogMethodFull } from "@repo/logger/src";
 
 export class GoogleSheetReader {
     /**
@@ -110,8 +110,7 @@ export class GoogleSheetReader {
             if (result.success) {
                 validRows.push(row);
             } else {
-                const message = result.error.issues[0].message;
-                logger.warn(`Issues for row ${idx}: ${message}`, { rowData: row });
+                logger.warn(`Issues for row ${idx}: ${result.error.issues[0].message};`, { rowData: row });
                 invalidRows.push(row);
                 hasValidationIssues = true;
             }
