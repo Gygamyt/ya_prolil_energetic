@@ -1,5 +1,5 @@
 import pino, { type Logger, type LoggerOptions } from 'pino';
-import { serializers } from './serializers.ts';
+import { serializers } from "./serializers.ts";
 
 export interface LoggerConfig {
     level: string;
@@ -28,18 +28,29 @@ export class LoggerFactory {
             return this.loggers.get(key)!;
         }
 
+        const logBindingsEnabled = process.env.LOG_BINDINGS_ENABLED === 'true';
+
         const pinoOptions: LoggerOptions = {
             level: config.level || 'info',
             serializers,
             formatters: {
                 level: (label) => ({ level: label.toUpperCase() }),
-                bindings: (bindings) => ({
-                    pid: bindings.pid,
-                    hostname: bindings.hostname,
-                    service: config.service,
-                    version: config.version || '1.0.0',
-                    env: config.environment
-                })
+                bindings: (bindings) => {
+                    if (logBindingsEnabled) {
+                        return {
+                            pid: bindings.pid,
+                            hostname: bindings.hostname,
+                            service: config.service,
+                            version: config.version || '1.0.0',
+                            env: config.environment
+                        };
+                    }
+
+                    return {
+                        pid: bindings.pid,
+                        hostname: bindings.hostname
+                    };
+                }
             },
             timestamp: pino.stdTimeFunctions.isoTime,
             redact: config.environment === 'production'

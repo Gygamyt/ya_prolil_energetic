@@ -1,9 +1,6 @@
 import { stdSerializers } from 'pino';
 
 export const serializers = {
-    /**
-     * Error serializer: форматируем Error и дополнительные поля
-     */
     err: stdSerializers.wrapErrorSerializer(
         (err: unknown) => {
             if (err instanceof Error) {
@@ -30,10 +27,6 @@ export const serializers = {
         }
     ),
 
-    /**
-     * Generic object serializer: логируем только базовые поля,
-     * чтобы не заливать лог большими структурами.
-     */
     obj: (object: any) => {
         if (object === null || object === undefined) {
             return object;

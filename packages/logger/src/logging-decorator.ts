@@ -6,6 +6,8 @@ export interface LoggingOptions {
     logResult?: boolean;
     logDuration?: boolean;
     context?: Record<string, any>;
+    logOnError?: boolean;
+    skipArgs?: number[];
 }
 
 export function LogMethod(options: LoggingOptions = {}) {
@@ -23,7 +25,7 @@ export function LogMethod(options: LoggingOptions = {}) {
             service: `${className}.${propertyKey}`
         });
 
-        descriptor.value = function (this: any, ...args: any[]) {
+        const newMethod = async function (this: any, ...args: any[]) {
             const startTime = process.hrtime.bigint();
             const requestId = this?.requestId || generateRequestId();
 
@@ -33,45 +35,14 @@ export function LogMethod(options: LoggingOptions = {}) {
                 ...options.context
             });
 
-            try {
-                if (options.logArgs) {
-                    contextLogger[options.level || 'debug']({
-                        args: sanitizeArgs(args)
-                    }, `Entering ${propertyKey}`);
-                }
-
-                const result = originalMethod.apply(this, args);
-
-                if (options.logDuration) {
-                    const duration = Number(process.hrtime.bigint() - startTime) / 1e6;
-                    contextLogger.info({ duration }, `Exiting ${propertyKey}`);
-                }
-
-                if (options.logResult) {
-                    contextLogger.debug({ result }, `Result of ${propertyKey}`);
-                }
-
-                return result;
-            } catch (error) {
-                contextLogger.error({ err: error }, `${propertyKey} failed`);
-                throw error;
-            }
-        };
-
-        descriptor.value = async function (this: any, ...args: any[]) { // Используем async
-            const startTime = process.hrtime.bigint();
-            const requestId = this?.requestId || generateRequestId();
-
-            const contextLogger = logger.child({
-                method: propertyKey,
-                requestId,
-                ...options.context
-            });
+            const sanitizedArgs = options.skipArgs
+                ? sanitizeArgs(args, options.skipArgs)
+                : sanitizeArgs(args);
 
             try {
-                if (options.logArgs) {
+                if (options.logArgs && !options.logOnError) {
                     contextLogger[options.level || 'debug']({
-                        args: sanitizeArgs(args)
+                        args: sanitizedArgs
                     }, `Entering ${propertyKey}`);
                 }
 
@@ -82,27 +53,48 @@ export function LogMethod(options: LoggingOptions = {}) {
                     contextLogger.info({ duration }, `Exiting ${propertyKey}`);
                 }
 
-                if (options.logResult) {
+                if (options.logResult && !options.logOnError) {
                     contextLogger.debug({ result }, `Result of ${propertyKey}`);
                 }
 
                 return result;
             } catch (error) {
-                contextLogger.error({ err: error }, `${propertyKey} failed`);
+                contextLogger.error({ err: error, args: sanitizedArgs }, `${propertyKey} failed`);
                 throw error;
             }
         };
 
+        descriptor.value = newMethod;
+
         return descriptor;
     };
+}
+
+export function LogMethodFull() {
+    return LogMethod({
+        level: 'info',
+        logArgs: true,
+        logResult: true,
+        logDuration: true,
+    });
+}
+
+export function LogMethodTimings() {
+    return LogMethod({
+        level: 'info',
+        logDuration: true
+    });
 }
 
 function generateRequestId(): string {
     return Math.random().toString(36).substring(2, 15);
 }
 
-function sanitizeArgs(args: any[]): any[] {
-    return args.map(arg =>
-        typeof arg === 'object' && arg !== null ? '[Object]' : arg
-    );
+function sanitizeArgs(args: any[], skip?: number[]): any[] {
+    return args.map((arg, index) => {
+        if (skip && skip.includes(index)) {
+            return '[Skipped]';
+        }
+        return typeof arg === 'object' && arg !== null ? '[Object]' : arg;
+    });
 }

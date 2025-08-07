@@ -1,7 +1,6 @@
-import { AsyncLocalStorage } from 'async_hooks';
-import { type Logger } from 'pino';
+import { AsyncLocalStorage } from "node:async_hooks";
+import { Logger } from "pino";
 import { LoggerFactory } from "./logger-factory.ts";
-
 
 export interface LoggerContext {
     requestId: string;

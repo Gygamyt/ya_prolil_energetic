@@ -2,9 +2,7 @@ import { google, sheets_v4 } from "googleapis";
 import { getAuth } from "./auth.ts";
 import { env } from "../utils/env.ts";
 import { RawRecordSchema } from "../zod-helper/employee.schema.ts";
-import { logger } from "@repo/logger/src/logger-context.ts";
-import { LoggerFactory } from "@repo/logger/src/logger-factory.ts";
-import { LogMethod } from "@repo/logger/src/logging-decorator.ts";
+import { logger  } from "@repo/logger/src";
 
 export class GoogleSheetReader {
     /**
@@ -31,7 +29,6 @@ export class GoogleSheetReader {
      * @returns A promise that resolves to a 2D array of strings representing the sheet's rows.
      * @throws Will throw if the Google Sheets API request fails.
      */
-    @LogMethod({level: "debug", logArgs: true })
     public static async readSheetRows(
         sheetName: string,
         spreadsheetId: string = env.GOOGLE_SHEET_ID
@@ -93,11 +90,13 @@ export class GoogleSheetReader {
     public static sortRowsByValidation(rows: string[][]): { validRows: string[][]; invalidRows: string[][]; } {
         const validRows: string[][] = [];
         const invalidRows: string[][] = [];
+        const warnings: string[] = [];
 
         const expectedLen = RawRecordSchema._def.items.length;
 
         rows.forEach((row, idx) => {
             if (row.length !== expectedLen) {
+                warnings.push(`Issues for row ${idx}: Row has incorrect number of columns. Expected ${expectedLen}, got ${row.length}.`);
                 invalidRows.push(row);
                 return;
             }
@@ -106,7 +105,7 @@ export class GoogleSheetReader {
 
             const result = RawRecordSchema.safeParse(normalized);
             if (!result.success) {
-                logger.error(`Issues for row ${idx}:`, result.error.issues);
+                warnings.push(`Issues for row ${idx}: ${result.error.issues[0].message}`);
             }
 
             if (result.success) {
@@ -116,85 +115,10 @@ export class GoogleSheetReader {
             }
         });
 
+        if (warnings.length > 0) {
+            logger.warn({ warnings }, "Validation completed with issues, but it's OK if no other validation errors.");
+        }
+
         return { validRows, invalidRows };
     }
 }
-
-// /**
-//  * Это чучело дохнет по причине того, что таблица специфично сделана, а я ленивый, но оставить надо
-//  * Reads an entire sheet but trims off trailing empty columns.
-//  * Includes detailed logging for debugging.
-//  *
-//  * @param sheetName – e.g. "AQA Benchinfo"
-//  * @param spreadsheetId – defaults to env.GOOGLE_SHEET_ID
-//  * @returns array of rows (each an array of strings)
-//  */
-// export async function readSheetSmart(
-//     sheetName: string,
-//     spreadsheetId: string = env.GOOGLE_SHEET_ID
-// ): Promise<string[][]> {
-//     const auth = getAuth();
-//     const sheets = google.sheets({ version: "v4", auth });
-//     const headerRes = await sheets.spreadsheets.values.get({
-//         spreadsheetId,
-//         range: `${sheetName}!1:1`,
-//         majorDimension: "ROWS",
-//     });
-//     const headers = headerRes.data.values?.[0] || [];
-//     let lastIdx = headers.length - 1;
-//     while (lastIdx >= 0 && (!headers[lastIdx] || headers[lastIdx].trim() === "")) {
-//         lastIdx--;
-//     }
-//     if (lastIdx < 0) {
-//         return [];
-//     }
-//
-//     function colLetter(idx: number): string {
-//         let s = "";
-//         while (idx >= 0) {
-//             s = String.fromCharCode((idx % 26) + 65) + s;
-//             idx = Math.floor(idx / 26) - 1;
-//         }
-//         return s;
-//     }
-//
-//     const lastCol = colLetter(lastIdx);
-//     const range = `${sheetName}!A1:${lastCol}`;
-//     const fullRes = await sheets.spreadsheets.values.get({
-//         spreadsheetId,
-//         range,
-//         majorDimension: "ROWS",
-//         valueRenderOption: "FORMATTED_VALUE",
-//     });
-//     return fullRes.data.values || [];
-// }
-
-// export async function readAndTrim(
-//     sheetName: string,
-//     spreadsheetId: string = env.GOOGLE_SHEET_ID
-// ): Promise<string[][]> {
-//     const auth = getAuth();
-//     const sheets = google.sheets({ version: "v4", auth });
-//
-//     const res = await sheets.spreadsheets.values.get({
-//         spreadsheetId,
-//         range: `${sheetName}!A1:Z1000`,
-//         majorDimension: "ROWS",
-//         valueRenderOption: "FORMATTED_VALUE",
-//     });
-//     const allRows = res.data.values || [];
-//
-//     let top = 0, bottom = allRows.length - 1;
-//     while (top <= bottom && allRows[top].every(cell => !cell?.toString().trim())) top++;
-//     while (bottom >= top && allRows[bottom].every(cell => !cell?.toString().trim())) bottom--;
-//     const trimmedRows = allRows.slice(top, bottom + 1);
-//
-//     if (!trimmedRows.length) return [];
-//     const colCount = trimmedRows[0].length;
-//     let left = 0, right = colCount - 1;
-//     while (left <= right && trimmedRows.every(row => !row[left]?.toString().trim())) left++;
-//     while (right >= left && trimmedRows.every(row => !row[right]?.toString().trim())) right--;
-//     return trimmedRows
-//         .map(row => row.slice(left, right + 1))
-//         .filter(row => row.some(cell => cell?.toString().trim() !== ""));
-// }
