@@ -1,16 +1,5 @@
 import { z } from "zod";
-
-const NullableFlag = z
-    .enum(["TRUE", "FALSE", ""])
-    .transform(v => v === "TRUE");
-const Grade = z.enum(["Intern", "Junior", "Middle", "Senior", "No"]);
-const SkillLevel = z.enum(["Low", "Medium", "High", "No", "On check"]);
-const OptionalString = z.string().optional();
-const BooleanString = z
-    .enum(["Yes", "No", ""])
-    .transform(v => v === "Yes");
-const Role = z.enum(["AQA", "Fullstack"]);
-const CEFRLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2", "No"]);
+import { CEFRLevel, Grade, NullableFlag, OptionalString, Role, SkillLevel } from "@repo/shared/src/schemas";
 
 export const RawRecordSchema = z.tuple([
     NullableFlag,        // 0: TRUE/FALSE/""
@@ -73,27 +62,4 @@ export const RowSchema = z.object({
     "Team Lead": z.string(),
     "В штат": z.string(),
     "На бенч": z.string(),
-});
-
-export const cleanEmployeeObjectSchema = z.object({
-    'Уровень': Grade,
-    'ФИО': z.string(),
-    'JS, TS': SkillLevel,
-    'Java': SkillLevel,
-    'Python': SkillLevel,
-    'C#': SkillLevel,
-    'Kotlin': SkillLevel,
-    'Ruby': SkillLevel,
-    'Swift': SkillLevel,
-    'Performance': SkillLevel,
-    'Security': SkillLevel,
-    'Accessibility': SkillLevel,
-    'Role': Role,
-    'Testing Framework': z.string(),
-    'English': CEFRLevel,
-    'German': CEFRLevel,
-    'Polish': CEFRLevel,
-    'Страна': z.string(),
-    'Город': z.string(),
-    'Team Lead': z.string(),
 });
