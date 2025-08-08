@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
+    "@nestjs/axios": "^4.0.1",
     "@repo/eslint-config": "file:packages/eslint-config",
     "@repo/tsconfig": "file:packages/tsconfig",
     "@types/node": "^20.10.0",
