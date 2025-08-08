@@ -1,4 +1,4 @@
-import { LoggerFactory } from "./logger-factory.ts";
+import { LoggerFactory } from "./logger-factory";
 import { Logger } from "winston";
 
 export interface LoggingOptions {

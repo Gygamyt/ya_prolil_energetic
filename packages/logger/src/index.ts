@@ -1,3 +1,3 @@
-export * from './logger-factory.ts';
-export * from './logger-context.ts';
-export * from './logging-decorator.ts';
+export * from './logger-factory';
+export * from './logger-context';
+export * from './logging-decorator';

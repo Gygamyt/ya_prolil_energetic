@@ -9,7 +9,7 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+    "npm": ">=9.0.0"
   },
   "type": "module",
   "scripts": {
@@ -28,12 +28,14 @@
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
     "@nestjs/axios": "^4.0.1",
+    "@nestjs/cli": "^11.0.10",
     "@repo/eslint-config": "file:packages/eslint-config",
     "@repo/tsconfig": "file:packages/tsconfig",
     "@types/node": "^20.10.0",
     "eslint": "^8.55.0",
     "prettier": "^3.1.0",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.3",
     "turbo": "^1.11.0",
     "typescript": "^5.9.2",
@@ -44,6 +46,8 @@
     "packages/*"
   ],
   "dependencies": {
+    "@fastify/swagger-ui": "^5.2.3",
+    "fastify": "^5.4.0",
     "uuid": "^11.1.0",
     "zod": "^3.22.4"
   }

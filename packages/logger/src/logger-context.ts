@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { Logger } from "winston"; // Change from pino to winston
-import { LoggerFactory } from "./logger-factory.ts";
+import { LoggerFactory } from "./logger-factory";
 
 export interface LoggerContext {
     requestId: string;
