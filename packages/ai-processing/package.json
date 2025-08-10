@@ -23,7 +23,6 @@
     "@repo/eslint-config": "file:../packages/eslint-config",
     "@repo/tsconfig": "file:../packages/tsconfig",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.0",
-    "vitest": "^1.0.4"
+    "typescript": "^5.3.0"
   }
 }

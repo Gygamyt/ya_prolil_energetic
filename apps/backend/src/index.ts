@@ -1,20 +1,23 @@
 import { buildApp } from './app.js';
+import { logger } from "@repo/logger/src";
+import { backEnv } from "@app/utils/backEnv";
+import { prefixes } from "@repo/shared/src";
 
-const port = Number(process.env.PORT ?? 3000);
-const host = process.env.HOST ?? '0.0.0.0';
+const port = Number(backEnv.PORT);
+const host = backEnv.HOST;
 
 const start = async () => {
-    console.log('[bootstrap] starting buildApp()...');
+    logger.info(`${prefixes.boot} starting buildApp()...`);
     const app = await buildApp();
-    console.log('[bootstrap] app built, launching listen...');
+    logger.info(`${prefixes.boot} app built, launching listen...`);
 
     const close = async () => {
-        console.log('[bootstrap] shutting down...');
+        logger.info(`${prefixes.boot} shutting down...`);
         try {
             await app.close();
             process.exit(0);
         } catch (err) {
-            console.error('[bootstrap] shutdown error:', err);
+            logger.error(`${prefixes.boot} shutdown error:`, err);
             process.exit(1);
         }
     };
@@ -23,10 +26,10 @@ const start = async () => {
     process.on('SIGINT', close);
 
     await app.listen({ port, host });
-    console.log(`[bootstrap] server listening at http://${host}:${port}`);
+    logger.info(`${prefixes.boot} server listening at http://${host}:${port}`);
 };
 
 start().catch((err) => {
-    console.error('[bootstrap] failed to start:', err);
+    logger.error(`${prefixes.boot} failed to start:`, err);
     process.exit(1);
 });

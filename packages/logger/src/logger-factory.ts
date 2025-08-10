@@ -2,16 +2,19 @@ import winston, { type Logger, type LoggerOptions, format, transports } from 'wi
 
 export interface LoggerConfig {
     level: string;
-    environment: 'development' | 'production' | 'test';
+    environment: loggerEnv;
     service: string;
     version?: string;
 }
+
+export type loggerEnv = 'development' | 'production' | 'test';
 
 export class LoggerFactory {
     private static instance: LoggerFactory;
     private loggers: Map<string, Logger> = new Map();
 
-    private constructor() {}
+    private constructor() {
+    }
 
     public static getInstance(): LoggerFactory {
         if (!this.instance) {
