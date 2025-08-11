@@ -13,8 +13,9 @@ export const Role = z.enum(["AQA", "Fullstack"]);
 export const CEFRLevel = z.enum(["A1", "A2", "B1", "B2", "C1", "C2", "No"]);
 
 export const cleanEmployeeObjectSchema = z.object({
-    'Уровень': Grade,
-    'ФИО': z.string(),
+    externalId: z.string().min(1).describe('Unique external identifier generated from stable fields'),
+    Grade: Grade,
+    Name: z.string().min(1),
     'JS, TS': SkillLevel,
     'Java': SkillLevel,
     'Python': SkillLevel,
@@ -26,11 +27,11 @@ export const cleanEmployeeObjectSchema = z.object({
     'Security': SkillLevel,
     'Accessibility': SkillLevel,
     'Role': Role,
-    'Testing Framework': z.string(),
+    'Testing Framework': OptionalString,
     'English': CEFRLevel,
     'German': CEFRLevel,
     'Polish': CEFRLevel,
-    'Страна': z.string(),
-    'Город': z.string(),
-    'Team Lead': z.string(),
+    'Country': OptionalString,
+    'City': OptionalString,
+    'Team Lead': OptionalString,
 });

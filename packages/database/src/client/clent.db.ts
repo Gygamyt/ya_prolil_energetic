@@ -22,7 +22,7 @@ export class MongoDBClient {
      * @returns {Promise<Db>} A promise that resolves to the connected Db instance.
      * @throws {Error} If the connection attempt fails.
      */
-    public static async connect(): Promise<Db> {
+    public static async getClient(): Promise<Db> {
         if (!dbInstance) {
             try {
                 await client.connect();

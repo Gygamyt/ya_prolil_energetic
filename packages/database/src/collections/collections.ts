@@ -1,10 +1,15 @@
-import type { Db, Collection } from 'mongodb';
+import type { Db, Collection, ObjectId } from 'mongodb';
 import { z } from 'zod';
 import { RawRecordSchema } from "@repo/google-integration/src/zod-helper/employee.schema";
 import { cleanEmployeeObjectSchema } from "@repo/shared/src/schemas";
 
 export type RawRecord = z.infer<typeof RawRecordSchema>;
-export type CleanEmployeeObject = z.infer<typeof cleanEmployeeObjectSchema>;
+
+export type CleanEmployeeObject = z.infer<typeof cleanEmployeeObjectSchema> & {
+    _id: ObjectId;
+};
+
+export type CleanEmployeeObjectInput = z.infer<typeof cleanEmployeeObjectSchema>;
 
 export function getCollections(db: Db): {
     rawData: Collection<RawRecord>;

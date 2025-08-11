@@ -1,6 +1,8 @@
+import { generateEmployeeExternalId } from "../utils/employee-id.helper";
+
 export const objectKeys = [
-    "Уровень",
-    "ФИО",
+    "Grade",
+    "Name",
     "JS, TS",
     "Java",
     "Python",
@@ -16,15 +18,15 @@ export const objectKeys = [
     "English",
     "German",
     "Polish",
-    "Страна",
-    "Город",
+    "Country",
+    "City",
     "Team Lead"
 ] as const;
 
-export function arrayToObject<T extends readonly string[]>(
+export function arrayToObject(
     headers: readonly string[],
-    values: T
-): Record<typeof headers[number], T[number]> {
+    values: string | any[]
+): Record<string, any> {
     if (headers.length !== values.length) {
         console.error(
             `arrayToObject error: keys length (${headers.length}) does not match values length (${values.length}).`,
@@ -32,8 +34,20 @@ export function arrayToObject<T extends readonly string[]>(
         );
         throw new Error("Keys and values arrays must have the same length");
     }
-    return headers.reduce((obj, key, idx) => {
-        obj[key] = values[idx];
-        return obj;
-    }, {} as Record<typeof headers[number], T[number]>);
+
+    const obj = headers.reduce((acc, key, idx) => {
+        acc[key] = values[idx];
+        return acc;
+    }, {} as Record<string, any>);
+
+    const externalId = generateEmployeeExternalId({
+        Name: obj.Name,
+        Grade: obj.Grade,
+        Role: obj.Role
+    });
+
+    return {
+        externalId,
+        ...obj
+    };
 }

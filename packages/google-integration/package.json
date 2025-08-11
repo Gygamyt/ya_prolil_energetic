@@ -13,7 +13,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest",
     "clean": "rm -rf dist",
-    "test:sheet": "tsx src/scripts/testReadSheet.ts"
+    "test:sheet": "tsx src/scripts/read-sheet.ts"
   },
   "dependencies": {
     "@repo/shared": "file:../shared",

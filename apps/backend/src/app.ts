@@ -3,13 +3,18 @@ import sensible from '@fastify/sensible';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import { registerSwagger } from './plugins/swagger.js';
-import { healthRoute } from './routes/health.route.js';
-import { usersRoute } from './routes/v1/users.route.js';
+import { healthRoute } from './routes/v1/health/health.route';
 import { MongoDBClient } from "@repo/database/src/client";
 import { loggerPlugin } from "@app/plugins/logging";
+import { logger } from "@repo/logger/src";
+import { employeesRoute } from "@app/routes/v1/employees/employees.route";
+import { errorHandlerPlugin } from "@app/plugins/error-handler";
 
 export async function buildApp() {
-    const app = Fastify({ logger: false });
+    const app = Fastify({
+        logger: false,
+        disableRequestLogging: process.env.NODE_ENV === 'production'
+    });
 
     /**
      * Default fastify plugins
@@ -21,11 +26,16 @@ export async function buildApp() {
     /**
      * Custom plugins
      */
+    await app.register(errorHandlerPlugin);
     await app.register(loggerPlugin);
     // await registerLogger(app);
     await registerSwagger(app);
 
-    await MongoDBClient.connect();
+    try {
+        await MongoDBClient.getClient();
+    } catch (error) {
+        logger.error(error);
+    }
 
     /**
      * Graceful shutdown
@@ -38,7 +48,7 @@ export async function buildApp() {
      * Routers setting
      */
     app.register(healthRoute, { prefix: '/health' });
-    // app.register(usersRoute, { prefix: '/v1/users' });
+    app.register(employeesRoute, { prefix: '/v1/users' });
 
     return app;
 }

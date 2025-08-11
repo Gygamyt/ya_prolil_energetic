@@ -3,15 +3,15 @@ import { contextLogger, formatRequest, logger } from '@repo/logger/src';
 import { parseUA } from '@app/utils/logging';
 import { getRequestId } from '../utils/getRequestId';
 
-export async function onRequestHook(req: FastifyRequest) {
+export async function onRequestHook(request: FastifyRequest) {
     // @ts-ignore
-    req._startTime = process.hrtime.bigint();
+    request._startTime = process.hrtime.bigint();
 
-    const requestId = getRequestId(req);
-    const userId = (req.headers['x-user-id'] as string | undefined) || undefined;
-    const correlationId = (req.headers['x-correlation-id'] as string | undefined) || undefined;
-    const ip = req.ip;
-    const uaParsed = parseUA(req.headers['user-agent']);
+    const requestId = getRequestId(request);
+    const userId = (request.headers['x-user-id'] as string | undefined) || undefined;
+    const correlationId = (request.headers['x-correlation-id'] as string | undefined) || undefined;
+    const ip = request.ip;
+    const uaParsed = parseUA(request.headers['user-agent']);
 
     await new Promise<void>((resolve) => {
         contextLogger.runWithContext(
@@ -20,9 +20,9 @@ export async function onRequestHook(req: FastifyRequest) {
                 userId,
                 correlationId,
                 metadata: {
-                    method: req.method,
-                    url: req.url,
-                    route: req.routeOptions?.url,
+                    method: request.method,
+                    url: request.url,
+                    route: request.routeOptions?.url,
                     ip,
                     uaParsed,
                 }
@@ -32,15 +32,13 @@ export async function onRequestHook(req: FastifyRequest) {
     });
 
     // @ts-ignore
-    req.log = contextLogger.getContextualLogger() ?? req.server.log;
+    request.log = contextLogger.getContextualLogger() ?? request.server.log;
 
-    // Красивый лог запроса
     logger.info(formatRequest({
-        method: req.method,
-        url: req.url,
+        method: request.method,
+        url: request.url,
         requestId
     }));
 
-    // @ts-ignore
-    req.log?.debug?.('request started');
+    request.log?.debug?.('request started');
 }

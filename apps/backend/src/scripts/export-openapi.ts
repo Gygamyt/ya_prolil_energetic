@@ -9,8 +9,8 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import { registerSwagger } from '../plugins/swagger.js';
 
-import { healthRoute } from '../routes/health.route.js';
-import { usersRoute } from '../routes/v1/users.route.js';
+import { healthRoute } from '../routes/v1/health/health.route';
+import { usersRoute } from '../routes/v1/users/users.route';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

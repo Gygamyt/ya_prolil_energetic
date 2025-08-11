@@ -1,7 +1,7 @@
 import { google, sheets_v4 } from "googleapis";
-import { getAuth } from "./auth.ts";
-import { env } from "../utils/env.ts";
-import { RawRecordSchema } from "../zod-helper/employee.schema.ts";
+import { getAuth } from "./auth";
+import { env } from "../utils/env";
+import { RawRecordSchema } from "../zod-helper/employee.schema";
 import { logger } from "@repo/logger/src";
 
 export class GoogleSheetReader {

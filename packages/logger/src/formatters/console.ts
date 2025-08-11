@@ -36,7 +36,27 @@ export function formatResponse({
 
 export function formatError({ method, url, error, requestId }: ErrorLogData): string {
     const reqId = requestId ? chalk.gray(`[${requestId.slice(0, 8)}]`) : '';
-    return `💀 ${chalk.red('ERROR')} ${method} ${url} ${chalk.red(error.message || 'Unknown error')} ${reqId}`.trim();
+
+    let emoji = '💀';
+    let errorType = 'ERROR';
+
+    if (error.message?.includes('required!')) {
+        emoji = '📋';
+        errorType = 'VALIDATION';
+    } else if (error.message?.includes('Schema')) {
+        emoji = '🔧';
+        errorType = 'SCHEMA';
+    } else if (error.message?.includes('connection') || error.message?.includes('MongoDB')) {
+        emoji = '🔌';
+        errorType = 'DATABASE';
+    }
+
+    const message = error.message || 'Unknown error';
+    const truncatedMessage = message.length > 100 ?
+        message.substring(0, 100) + '...' :
+        message;
+
+    return `${emoji} ${chalk.red(errorType)} ${method} ${url} ${chalk.red(truncatedMessage)} ${reqId}`.trim();
 }
 
 function formatBytes(bytes: number): string {

@@ -34,7 +34,7 @@ export const healthRoute: FastifyPluginAsync = async (app) => {
             }
         },
         async () => {
-            const db = await MongoDBClient.connect();
+            const db = await MongoDBClient.getClient();
             const { rawData, employees } = getCollections(db);
             const [rawCount, cleanCount] = await Promise.all([
                 rawData.countDocuments().catch(() => -1),
@@ -50,7 +50,7 @@ export const healthRoute: FastifyPluginAsync = async (app) => {
         },
         async () => {
             try {
-                const db = await MongoDBClient.connect();
+                const db = await MongoDBClient.getClient();
                 await db.command({ ping: 1 });
                 return { status: 'ok' };
             } catch {

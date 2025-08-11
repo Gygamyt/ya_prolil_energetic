@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { getAuth } from './auth.ts';
+import { getAuth } from './auth';
 
 export async function downloadFile(fileId: string): Promise<Buffer> {
     const auth = getAuth();
