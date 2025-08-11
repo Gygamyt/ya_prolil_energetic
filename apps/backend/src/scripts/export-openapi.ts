@@ -7,7 +7,7 @@ import { dirname, resolve } from 'node:path';
 import sensible from '@fastify/sensible';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import { registerSwagger } from '../plugins/swagger.js';
+import { registerSwagger } from '../plugins/swagger/swagger';
 
 import { healthRoute } from '../routes/v1/health/health.route';
 import { usersRoute } from '../routes/v1/users/users.route';

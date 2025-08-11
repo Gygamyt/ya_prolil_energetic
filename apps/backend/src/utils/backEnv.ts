@@ -18,6 +18,8 @@ const schema = z.object({
     HOST: z.string().default('0.0.0.0'),
 
     SERVICE_NAME: z.string().default('backend'),
+
+    EMPLOYEE_SYNC_API_KEY: z.string().min(1, 'EMPLOYEE_SYNC_API_KEY is required for sync operations')
 });
 
 export const backEnv = schema.parse(process.env);

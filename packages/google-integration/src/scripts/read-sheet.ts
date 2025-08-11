@@ -120,4 +120,4 @@ async function main() {
     }
 }
 
-main().then(() => logger.info(`End of read sheet module`));
+// main().then(() => logger.info(`End of read sheet module`));

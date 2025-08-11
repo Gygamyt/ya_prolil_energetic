@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { createJsonSchemaFromZod } from "@app/utils/zod/type-to-schema";
 import { describe, expect, it } from 'vitest';
+import { createJsonSchemaFromZod } from "@app/utils/zod/type-to-schema";
 
 describe('createJsonSchemaFromZod', () => {
     it('should extract enum values correctly', () => {

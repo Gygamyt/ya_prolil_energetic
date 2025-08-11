@@ -23,7 +23,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build --filter=!@repo/backend && changeset publish"
+    "release": "turbo run build --filter=!@repo/backend && changeset publish",
+    "test:ui": "vitest --ui"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
