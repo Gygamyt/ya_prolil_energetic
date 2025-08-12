@@ -17,7 +17,7 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
     app.post<{
         Querystring: SyncQuerystring;
     }>('/employees', {
-        preHandler: (app as any).requireSyncAuth,
+        preHandler: (app as any).requireSyncAuth, // ✅ Авторизация
         schema: {
             headers: {
                 type: 'object',
@@ -104,7 +104,7 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     additionalProperties: false
                 }
             },
-            tags: ['sync'],
+            tags: ['Sync'],
             summary: 'Sync employees from Google Sheets',
             description: '🔄 Fetches employee data from Google Sheets and syncs with database. Creates new employees or updates existing ones based on externalId field.'
         }
@@ -160,8 +160,25 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
     app.post<{
         Querystring: PopulateQuerystring;
     }>('/populate', {
-        preHandler: (app as any).requireSyncAuth,
+        preHandler: (app as any).requireSyncAuth, // ✅ Добавлена авторизация
         schema: {
+            headers: {
+                type: 'object',
+                properties: {
+                    'x-sync-api-key': {
+                        type: 'string',
+                        description: 'API key for sync operations'
+                    },
+                    'x-api-key': {
+                        type: 'string',
+                        description: 'Alternative API key header'
+                    },
+                    'authorization': {
+                        type: 'string',
+                        description: 'Bearer token format'
+                    }
+                }
+            },
             querystring: {
                 type: 'object',
                 properties: {
@@ -203,9 +220,20 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     },
                     required: ['success', 'result', 'message', 'timestamp'],
                     additionalProperties: false
+                },
+                401: {
+                    type: 'object',
+                    properties: {
+                        error: { type: 'string' },
+                        message: { type: 'string' },
+                        code: { type: 'string' },
+                        timestamp: { type: 'string' }
+                    },
+                    required: ['error', 'message', 'code', 'timestamp'],
+                    additionalProperties: false
                 }
             },
-            tags: ['sync'],
+            tags: ['Sync'],
             summary: 'Initial population of database from Google Sheets',
             description: '🌱 Populates empty database with employee data from Google Sheets. Skips if database already contains data unless force=true.'
         }
@@ -245,8 +273,25 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
 
     // GET /sync/status - check sync service status
     app.get('/status', {
-        preHandler: (app as any).requireSyncAuth,
+        preHandler: (app as any).requireSyncAuth, // ✅ Добавлена авторизация
         schema: {
+            headers: {
+                type: 'object',
+                properties: {
+                    'x-sync-api-key': {
+                        type: 'string',
+                        description: 'API key for sync operations'
+                    },
+                    'x-api-key': {
+                        type: 'string',
+                        description: 'Alternative API key header'
+                    },
+                    'authorization': {
+                        type: 'string',
+                        description: 'Bearer token format'
+                    }
+                }
+            },
             response: {
                 200: {
                     type: 'object',
@@ -268,6 +313,17 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     required: ['status', 'service', 'stats', 'timestamp'],
                     additionalProperties: false
                 },
+                401: {
+                    type: 'object',
+                    properties: {
+                        error: { type: 'string' },
+                        message: { type: 'string' },
+                        code: { type: 'string' },
+                        timestamp: { type: 'string' }
+                    },
+                    required: ['error', 'message', 'code', 'timestamp'],
+                    additionalProperties: false
+                },
                 500: {
                     type: 'object',
                     properties: {
@@ -280,7 +336,7 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     additionalProperties: false
                 }
             },
-            tags: ['sync'],
+            tags: ['Sync'],
             summary: 'Check sync service status',
             description: '📊 Returns current status and statistics of the sync service'
         }
@@ -316,8 +372,25 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
 
     // GET /sync/validate - test Google Sheets connection
     app.get('/validate', {
-        preHandler: (app as any).requireSyncAuth,
+        preHandler: (app as any).requireSyncAuth, // ✅ Добавлена авторизация
         schema: {
+            headers: {
+                type: 'object',
+                properties: {
+                    'x-sync-api-key': {
+                        type: 'string',
+                        description: 'API key for sync operations'
+                    },
+                    'x-api-key': {
+                        type: 'string',
+                        description: 'Alternative API key header'
+                    },
+                    'authorization': {
+                        type: 'string',
+                        description: 'Bearer token format'
+                    }
+                }
+            },
             response: {
                 200: {
                     type: 'object',
@@ -340,9 +413,20 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     },
                     required: ['isConnected', 'employeeCount', 'timestamp'],
                     additionalProperties: false
+                },
+                401: {
+                    type: 'object',
+                    properties: {
+                        error: { type: 'string' },
+                        message: { type: 'string' },
+                        code: { type: 'string' },
+                        timestamp: { type: 'string' }
+                    },
+                    required: ['error', 'message', 'code', 'timestamp'],
+                    additionalProperties: false
                 }
             },
-            tags: ['sync'],
+            tags: ['Sync'],
             summary: 'Validate Google Sheets connection',
             description: '🔍 Tests connection to Google Sheets and returns sample data'
         }
@@ -377,8 +461,25 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
 
     // DELETE /sync/clear - clear all employee data (dangerous!)
     app.delete('/clear', {
-        preHandler: (app as any).requireSyncAuth,
+        preHandler: (app as any).requireSyncAuth, // ✅ Добавлена авторизация
         schema: {
+            headers: {
+                type: 'object',
+                properties: {
+                    'x-sync-api-key': {
+                        type: 'string',
+                        description: 'API key for sync operations'
+                    },
+                    'x-api-key': {
+                        type: 'string',
+                        description: 'Alternative API key header'
+                    },
+                    'authorization': {
+                        type: 'string',
+                        description: 'Bearer token format'
+                    }
+                }
+            },
             response: {
                 200: {
                     type: 'object',
@@ -390,9 +491,20 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     },
                     required: ['success', 'deletedCount', 'message', 'timestamp'],
                     additionalProperties: false
+                },
+                401: {
+                    type: 'object',
+                    properties: {
+                        error: { type: 'string' },
+                        message: { type: 'string' },
+                        code: { type: 'string' },
+                        timestamp: { type: 'string' }
+                    },
+                    required: ['error', 'message', 'code', 'timestamp'],
+                    additionalProperties: false
                 }
             },
-            tags: ['sync'],
+            tags: ['Sync'],
             summary: 'Clear all employee data (DANGEROUS)',
             description: '🗑️ Deletes all employee records from database. Use with caution!'
         }
@@ -429,8 +541,25 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
 
     // GET /sync/health - health check endpoint
     app.get('/health', {
-        preHandler: (app as any).requireSyncAuth,
+        preHandler: (app as any).requireSyncAuth, // ✅ Добавлена авторизация
         schema: {
+            headers: {
+                type: 'object',
+                properties: {
+                    'x-sync-api-key': {
+                        type: 'string',
+                        description: 'API key for sync operations'
+                    },
+                    'x-api-key': {
+                        type: 'string',
+                        description: 'Alternative API key header'
+                    },
+                    'authorization': {
+                        type: 'string',
+                        description: 'Bearer token format'
+                    }
+                }
+            },
             response: {
                 200: {
                     type: 'object',
@@ -454,6 +583,17 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     required: ['service', 'status', 'database', 'sheets', 'timestamp'],
                     additionalProperties: false
                 },
+                401: {
+                    type: 'object',
+                    properties: {
+                        error: { type: 'string' },
+                        message: { type: 'string' },
+                        code: { type: 'string' },
+                        timestamp: { type: 'string' }
+                    },
+                    required: ['error', 'message', 'code', 'timestamp'],
+                    additionalProperties: false
+                },
                 503: {
                     type: 'object',
                     properties: {
@@ -468,7 +608,7 @@ export const syncRoute: FastifyPluginAsync = async (app) => {
                     additionalProperties: false
                 }
             },
-            tags: ['sync'],
+            tags: ['Sync'],
             summary: 'Service health check',
             description: '🏥 Comprehensive health check of sync service components'
         }
