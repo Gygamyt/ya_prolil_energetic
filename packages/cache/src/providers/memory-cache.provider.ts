@@ -23,18 +23,18 @@ export class MemoryCacheProvider implements CacheProvider {
 
         if (value !== undefined) {
             this.stats.hits++;
-            console.log(`📦 Memory Cache HIT: ${key.substring(0, 12)}...`);
+            // console.log(`📦 Memory Cache HIT: ${key.substring(0, 12)}...`);
             return value;
         }
 
         this.stats.misses++;
-        console.log(`🔄 Memory Cache MISS: ${key.substring(0, 12)}...`);
+        // console.log(`🔄 Memory Cache MISS: ${key.substring(0, 12)}...`);
         return null;
     }
 
     set<T>(key: string, value: T, ttl?: number): void {
         this.cache.set(key, value, ttl || this.ttl);
-        console.log(`💾 Memory Cache SET: ${key.substring(0, 12)}... (TTL: ${ttl || this.ttl}s)`);
+        // console.log(`💾 Memory Cache SET: ${key.substring(0, 12)}... (TTL: ${ttl || this.ttl}s)`);
     }
 
     del(key: string): void {
@@ -44,7 +44,7 @@ export class MemoryCacheProvider implements CacheProvider {
     clear(): void {
         this.cache.flushAll();
         this.stats = { hits: 0, misses: 0 };
-        console.log('🗑️ Memory cache cleared');
+        // console.log('🗑️ Memory cache cleared');
     }
 
     has(key: string): boolean {

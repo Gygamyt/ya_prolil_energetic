@@ -47,22 +47,17 @@ export abstract class BaseParser {
             .digest('hex')
             .substring(0, 16); // Первые 16 символов
 
-        const cacheKey = `${configHash}:${inputHash}`;
-        console.log(`🔑 Generated cache key: ${cacheKey}`);
-
-        return cacheKey;
+        return `${configHash}:${inputHash}`;
     }
 
     async parseWithCache(input: string): Promise<CachedParseResult> {
         if (!this.config.enableCaching) {
-            console.log('🔄 Cache disabled, parsing directly...');
             return this.parse(input);
         }
 
         const cacheKey = this.generateCacheKey(input);
         const startTime = Date.now();
 
-        // Пробуем получить из кеша
         const cached = await this.cacheProvider!.get<ParseResult>(cacheKey);
         if (cached) {
             const cacheTime = Date.now() - startTime;
@@ -78,15 +73,11 @@ export abstract class BaseParser {
             };
         }
 
-        // Если кеша нет - парсим
-        console.log(`🔄 Cache MISS: ${cacheKey.substring(0, 12)}..., parsing...`);
         const parseStart = Date.now();
         const result = await this.parse(input);
         const parseTime = Date.now() - parseStart;
 
-        // Кешируем результат
         await this.cacheProvider!.set(cacheKey, result);
-        console.log(`💾 Cached result in ${Date.now() - startTime}ms`);
 
         return {
             ...result,
@@ -103,7 +94,6 @@ export abstract class BaseParser {
         const cache = CacheFactory.get('parser');
         if (cache) {
             await cache.clear();
-            logger.info('🗑️ Parser cache cleared globally');
         }
     }
 

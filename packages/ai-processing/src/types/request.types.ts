@@ -1,29 +1,24 @@
 export interface MatchingRequirements {
-    // Основные поля - один в один с ClientRequest
     levels?: string[];
     languageRequirements?: LanguageRequirement[];
     teamSize?: number;
 
-    // Локация - упрощенная версия
     location?: {
         regions?: string[];
         workType?: "Remote" | "Office" | "Hybrid";
         timezone?: string;
     };
 
-    // Опыт - ключевые поля для matching
     experience?: {
         minTotalYears?: number;
         leadershipRequired?: boolean;
         roleExperience?: RoleExperience[];
     };
 
-    // Дополнительная информация для AI
     role?: string;
     responsibilities?: string;
     industry?: string;
 
-    // Навыки если есть
     skills?: {
         required?: string[];
         preferred?: string[];
@@ -33,20 +28,17 @@ export interface MatchingRequirements {
 export interface ClientRequest {
     id: string;
 
-    // Основные требования (с поддержкой всех плюсов/минусов)
-    levels: string[];              // ["Junior+", "Middle", "Senior"]
+    levels: string[];
     languageRequirements: LanguageRequirement[];
     teamSize: number;
 
-    // Расширенная локация
     location: {
-        regions?: string[];          // ["EU", "US"]
-        timezone?: string;           // "EST", "CET"
+        regions?: string[];
+        timezone?: string;
         workType?: "Remote" | "Office" | "Hybrid";
         additionalRequirements?: string;
     };
 
-    // Опыт и лидерство
     experience: {
         minTotalYears?: number;
         leadershipRequired: boolean;
@@ -54,14 +46,12 @@ export interface ClientRequest {
         roleExperience?: RoleExperience[];
     };
 
-    // Навыки с приоритизацией
     skills: {
         required: string[];
         preferred: string[];
         leadership?: string[];
     };
 
-    // Метаданные
     role: string;
     industry?: string;
     responsibilities: string;
@@ -69,23 +59,20 @@ export interface ClientRequest {
     salesManager?: string;
     coordinator?: string;
 
-    // Парсинг метаданные
     parseStrategy: ParseStrategy;
     parseConfidence: number;
     rawInput: string;
 
-    // Системные поля
     status: RequestStatus;
     createdAt: Date;
     processedAt?: Date;
     errorMessage?: string;
 }
 
-// Новый интерфейс для языков
 export interface LanguageRequirement {
     language: SupportedLanguage;
     level: LanguageLevel;
-    modifier?: "+" | "-";          // B2+, C1-
+    modifier?: "+" | "-";
     priority: "required" | "preferred" | "nice-to-have";
 }
 
@@ -120,7 +107,7 @@ export interface CachedParseResult extends ParseResult {
         cacheTime?: number;
         parseTime?: number;
         totalTime?: number;
-        [key: string]: any; // Для будущих расширений
+        [key: string]: any;
     };
 }
 
@@ -134,24 +121,22 @@ export interface ParsedSkills {
     confidence: number;
 }
 
-// Входные данные для парсера
 export interface ParseInput {
-    data: string;                 // сырой текст запроса
-    parseStrategy?: ParseStrategy; // стратегия парсинга
-    clientFormat?: "salesforce" | "custom"; // формат клиента
+    data: string;
+    parseStrategy?: ParseStrategy;
+    clientFormat?: "salesforce" | "custom";
 }
 
-// Конфигурация парсеров
 export interface ParseConfig {
     aiProvider: "gemini";
-    confidenceThreshold: number;  // минимальный confidence для успеха
+    confidenceThreshold: number;
     fallbackStrategy: ParseStrategy;
     enableCaching: boolean;
 }
 
 export interface RoleExperience {
-    role: string;           // "QA Engineer", "Lead QA", "Senior Developer"
-    years: number;          // 8
-    source: string;         // "field_14" или "field_33"
-    requirements?: string[]; // ["team leadership", "mentoring", "automation"]
+    role: string;
+    years: number;
+    source: string;
+    requirements?: string[];
 }

@@ -135,7 +135,6 @@ export const getEmployeeByIdTool = {
     }
 };
 
-// Tool для анализа навыков команды
 export const analyzeTeamSkillsTool = {
     name: 'analyze_team_skills',
     description: 'Analyze skills distribution and capabilities of a team or all employees',
@@ -260,7 +259,6 @@ function generateInsights(
         }
     });
 
-    // Grade insights
     const totalEmployees = Object.values(gradeDistribution).reduce((sum, count) => sum + count, 0);
     Object.entries(gradeDistribution).forEach(([grade, count]) => {
         if (count > 0) {
@@ -269,7 +267,6 @@ function generateInsights(
         }
     });
 
-    // Role insights
     Object.entries(roleDistribution).forEach(([role, count]) => {
         if (count > 0) {
             const percentage = ((count / totalEmployees) * 100).toFixed(1);

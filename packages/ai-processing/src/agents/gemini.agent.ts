@@ -34,7 +34,7 @@ export class GeminiEmployeeAgent {
             const response = await generateText({
                 model: this.model as any,
                 prompt: prompt,
-                temperature: 0.3  // Уменьшаем для более фокусированных ответов
+                temperature: 0.3
             });
 
             const duration = Date.now() - startTime;

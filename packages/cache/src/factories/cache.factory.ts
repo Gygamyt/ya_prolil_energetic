@@ -31,7 +31,7 @@ export class CacheFactory {
         }
 
         CacheFactory.instances.set(name, provider);
-        console.log(`🏭 Created cache provider: ${name} (${config.provider})`);
+        // console.log(`🏭 Created cache provider: ${name} (${config.provider})`);
 
         return provider;
     }
@@ -43,7 +43,7 @@ export class CacheFactory {
     static clearAll(): void {
         for (const [name, provider] of CacheFactory.instances.entries()) {
             provider.clear();
-            console.log(`🗑️ Cleared cache: ${name}`);
+            // console.log(`🗑️ Cleared cache: ${name}`);
         }
     }
 }
