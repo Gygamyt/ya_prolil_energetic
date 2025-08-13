@@ -104,21 +104,13 @@ export class StandardParser extends BaseParser {
             // Рассчитываем confidence на основе извлеченных полей
             const confidence = this.calculateConfidence(extractedFields, input);
 
-            // 🔧 FIX: Убедимся что возвращаем чистые типы
-            const result: ParseResult = {
+            return {
                 success: confidence > this.config.confidenceThreshold,
                 data,
                 confidence: Number(confidence),
                 strategy: 'standard',
                 extractedFields: [...extractedFields] // копия массива
             };
-
-            // 🔍 DEBUG: Логирование для отладки
-            console.log('Parse result data:', JSON.stringify(result.data, null, 2));
-            console.log('Language requirements:', result.data?.languageRequirements);
-            console.log('Experience roleExperience:', result.data?.experience?.roleExperience);
-
-            return result;
 
         } catch (error) {
             console.error('StandardParser error:', error);

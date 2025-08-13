@@ -1,10 +1,142 @@
-import { LanguageLevel, LanguageRequirement, ParseConfig, ParseResult, SupportedLanguage } from "../types/request.types";
+import { CacheConfig, CacheFactory, CacheProvider } from "@ai-management/cache/src";
+import { CachedParseResult, LanguageLevel, LanguageRequirement, ParseConfig, ParseResult, SupportedLanguage } from "../types/request.types";
+import crypto from 'crypto';
+import { logger } from "@repo/logger/src";
 
 export abstract class BaseParser {
     protected config: ParseConfig;
+    private cacheProvider: CacheProvider | undefined;
+    private static cacheInitialized = false;
 
-    constructor(config: ParseConfig) {
+    protected constructor(config: ParseConfig) {
         this.config = config;
+        this.initializeCache();
+    }
+
+    private initializeCache(): void {
+        if (!BaseParser.cacheInitialized) {
+            const cacheConfig: CacheConfig = {
+                provider: 'memory',
+                ttl: 300,
+                keyPrefix: 'parser:',
+                maxSize: 1000,
+                checkPeriod: 60
+            };
+
+            CacheFactory.create('parser', cacheConfig);
+            BaseParser.cacheInitialized = true;
+            logger.info(`🏭 Parser cache initialized: ${cacheConfig.provider}`);
+        }
+
+        this.cacheProvider = CacheFactory.get('parser')!;
+    }
+
+    private generateCacheKey(input: string): string {
+        const configHash = crypto.createHash('md5')
+            .update(JSON.stringify({
+                parser: this.constructor.name, // StandardParser, FlexibleParser, etc.
+                confidenceThreshold: this.config.confidenceThreshold,
+                fallbackStrategy: this.config.fallbackStrategy,
+                aiProvider: this.config.aiProvider
+            }))
+            .digest('hex')
+            .substring(0, 8); // Первые 8 символов
+
+        const inputHash = crypto.createHash('sha256')
+            .update(input.trim()) // Убираем лишние пробелы для консистентности
+            .digest('hex')
+            .substring(0, 16); // Первые 16 символов
+
+        const cacheKey = `${configHash}:${inputHash}`;
+        console.log(`🔑 Generated cache key: ${cacheKey}`);
+
+        return cacheKey;
+    }
+
+    async parseWithCache(input: string): Promise<CachedParseResult> {
+        if (!this.config.enableCaching) {
+            console.log('🔄 Cache disabled, parsing directly...');
+            return this.parse(input);
+        }
+
+        const cacheKey = this.generateCacheKey(input);
+        const startTime = Date.now();
+
+        // Пробуем получить из кеша
+        const cached = await this.cacheProvider!.get<ParseResult>(cacheKey);
+        if (cached) {
+            const cacheTime = Date.now() - startTime;
+            console.log(`📦 Cache HIT in ${cacheTime}ms: ${cacheKey.substring(0, 12)}...`);
+
+            return {
+                ...cached,
+                metadata: {
+                    fromCache: true,
+                    cacheHit: true,
+                    cacheTime
+                }
+            };
+        }
+
+        // Если кеша нет - парсим
+        console.log(`🔄 Cache MISS: ${cacheKey.substring(0, 12)}..., parsing...`);
+        const parseStart = Date.now();
+        const result = await this.parse(input);
+        const parseTime = Date.now() - parseStart;
+
+        // Кешируем результат
+        await this.cacheProvider!.set(cacheKey, result);
+        console.log(`💾 Cached result in ${Date.now() - startTime}ms`);
+
+        return {
+            ...result,
+            metadata: {
+                fromCache: false,
+                cacheHit: false,
+                parseTime,
+                totalTime: Date.now() - startTime
+            }
+        };
+    }
+
+    static async clearParserCache(): Promise<void> {
+        const cache = CacheFactory.get('parser');
+        if (cache) {
+            await cache.clear();
+            logger.info('🗑️ Parser cache cleared globally');
+        }
+    }
+
+    static async getParserCacheStats() {
+        const cache = CacheFactory.get('parser');
+        if (!cache) {
+            return {
+                error: 'Cache not initialized',
+                available: false
+            };
+        }
+
+        const stats = await cache.getStats();
+        return {
+            available: true,
+            provider: 'memory',
+            ...stats,
+            efficiency: stats.hits && stats.misses ?
+                Math.round((stats.hits / (stats.hits + stats.misses)) * 100) : 0
+        };
+    }
+
+    // 🔧 Инстанс методы для локального управления
+    async invalidateCache(input?: string): Promise<void> {
+        if (input) {
+            // Инвалидируем конкретный ключ
+            const cacheKey = this.generateCacheKey(input);
+            await this.cacheProvider!.del(cacheKey);
+            logger.info(`🗑️ Invalidated cache for key: ${cacheKey.substring(0, 12)}...`);
+        } else {
+            // Инвалидируем весь кеш
+            await BaseParser.clearParserCache();
+        }
     }
 
     abstract parse(input: string): Promise<ParseResult>;

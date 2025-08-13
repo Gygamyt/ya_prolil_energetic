@@ -28,9 +28,9 @@ describe('StandardParser', () => {
         expect(result.success).toBe(false);
         expect(result.confidence).toBeLessThan(0.6);
         expect(result.strategy).toBe('standard');
-        expect(result.extractedFields).toEqual([]); // Теперь должно быть пустым
+        expect(result.extractedFields).toEqual([]);
         expect(result.data?.rawInput).toBe('');
-        expect(result.data?.teamSize).toBeUndefined(); // Проверяем что нет дефолтных значений
+        expect(result.data?.teamSize).toBeUndefined();
         expect(result.data?.experience).toBeUndefined();
     });
 
@@ -94,7 +94,7 @@ B2
         expect(result.extractedFields).toContain('teamSize');
         expect(result.extractedFields).toContain('languageRequirements');
         expect(result.extractedFields).toHaveLength(3);
-        expect(result.confidence).toBeGreaterThan(0.7); // Все 3 критичных поля
+        expect(result.confidence).toBeGreaterThan(0.7);
         expect(result.success).toBe(true);
     });
 
@@ -143,11 +143,9 @@ B2+ English required, Spanish C1 preferred
         expect(result.data?.levels).toEqual(['Senior']);
         expect(result.data?.teamSize).toBe(1);
 
-        // Проверяем языковые требования
         expect(result.data?.languageRequirements).toBeDefined();
         expect(result.data?.languageRequirements).toHaveLength(2);
 
-        // Английский B2+
         expect(result.data?.languageRequirements?.[0]).toMatchObject({
             language: 'English',
             level: 'B2',
@@ -155,7 +153,6 @@ B2+ English required, Spanish C1 preferred
             priority: 'required'
         });
 
-        // Испанский C1
         expect(result.data?.languageRequirements?.[1]).toMatchObject({
             language: 'Spanish',
             level: 'C1',
@@ -185,7 +182,6 @@ Remote (EST time zone alignment until 11 am Central)
         expect(result.data?.levels).toEqual(['Senior']);
         expect(result.data?.teamSize).toBe(1);
 
-        // Проверяем локацию
         expect(result.data?.location).toBeDefined();
         expect(result.data?.location?.workType).toBe('Remote');
         expect(result.data?.location?.timezone).toBe('EST');
@@ -223,7 +219,6 @@ We need a strong leader with 10+ years total experience.
         expect(result.data?.teamSize).toBe(1);
         expect(result.data?.role).toContain('Lead QA');
 
-        // Проверяем опыт - теперь должно быть 10 (максимум из 8+ и 10+)
         expect(result.data?.experience).toBeDefined();
         expect(result.data?.experience?.minTotalYears).toBe(10);
         expect(result.data?.experience?.leadershipRequired).toBe(true);
@@ -272,16 +267,13 @@ Strong leadership skills required for establishing QA function.
         console.log('Full request confidence:', result.confidence);
         console.log('Full request extracted fields:', result.extractedFields);
 
-        // Основные проверки
         expect(result.success).toBe(true);
         expect(result.strategy).toBe('standard');
         expect(result.confidence).toBeGreaterThan(0.8); // Высокий confidence для полного запроса
 
-        // Уровни
         expect(result.data?.levels).toEqual(['Middle+', 'Senior']);
         expect(result.data?.teamSize).toBe(2);
 
-        // Языковые требования
         expect(result.data?.languageRequirements).toHaveLength(2);
         expect(result.data?.languageRequirements?.[0]).toMatchObject({
             language: 'English',
@@ -295,32 +287,27 @@ Strong leadership skills required for establishing QA function.
             priority: 'preferred'
         });
 
-        // Локация
         expect(result.data?.location).toMatchObject({
             regions: ['EU'],
             workType: 'Remote',
             timezone: 'CET'
         });
 
-        // Опыт
         expect(result.data?.experience?.minTotalYears).toBe(10);
         expect(result.data?.experience?.leadershipRequired).toBe(true);
         expect(result.data?.experience?.leadershipYears).toBe(3);
         expect(result.data?.experience?.roleExperience).toBeDefined();
 
-        // Метаданные
         expect(result.data?.industry).toBe('Information Technologies');
         expect(result.data?.salesManager).toBe('Dzmitry Kastsiuk');
         expect(result.data?.coordinator).toBe('Kseniya Hanzha');
         expect(result.data?.deadline).toEqual(new Date('2025-08-15'));
 
-        // Роль и обязанности
         expect(result.data?.role).toContain('Senior QA');
         expect(result.data?.responsibilities).toContain('Lead team');
         expect(result.data?.responsibilities).toContain('TypeScript');
         expect(result.data?.responsibilities).toContain('Playwright');
 
-        // Проверяем все основные поля в extractedFields
         const expectedFields = [
             'levels', 'teamSize', 'languageRequirements', 'location',
             'experience', 'industry', 'salesManager', 'coordinator',
@@ -335,7 +322,6 @@ Strong leadership skills required for establishing QA function.
     });
 
     describe('Edge Cases and Error Handling', () => {
-        // 🔧 FIX: Одиннадцатый тест - некорректные данные
         it('should handle malformed data gracefully', async () => {
             const malformedRequest = `
 6. Уровень разработчиков
@@ -354,7 +340,6 @@ InvalidDate
             expect(result.success).toBe(false);
             expect(result.confidence).toBeLessThan(0.6);
 
-            // 🔧 FIX: Проверяем что levels либо undefined, либо пустой массив
             if (result.data?.levels !== undefined) {
                 expect(result.data.levels).toEqual([]);
             } else {
@@ -364,7 +349,6 @@ InvalidDate
             expect(result.data?.teamSize).toBeUndefined();
             expect(result.data?.deadline).toBeUndefined();
 
-            // languageRequirements аналогично
             if (result.data?.languageRequirements !== undefined) {
                 expect(result.data.languageRequirements).toEqual([]);
             } else {
@@ -374,7 +358,6 @@ InvalidDate
             expect(result.error).toBeUndefined();
         });
 
-        // 🔧 FIX: Двенадцатый тест - неструктурированный текст
         it('should handle unstructured text with low confidence', async () => {
             const unstructuredText = `
 Hello, we are looking for a senior QA engineer with good English skills.
@@ -392,17 +375,13 @@ Please send us resumes of suitable candidates as soon as possible.
             expect(result.success).toBe(false);
             expect(result.confidence).toBeLessThan(0.4);
 
-            // 🔧 FIX: Парсер может извлечь некоторые поля (например, experience из "5+ years")
-            // Поэтому проверяем что extractedFields либо пустой, либо очень короткий
             expect(result.extractedFields.length).toBeLessThanOrEqual(1);
 
-            // Системные поля все равно должны быть
             expect(result.data?.rawInput).toBe(unstructuredText);
             expect(result.data?.parseStrategy).toBe('standard');
             expect(result.data?.status).toBe('pending');
         });
 
-        // Тринадцатый тест остается без изменений - он работает корректно
         it('should extract valid fields from partially correct data', async () => {
             const partiallyCorrectRequest = `
 Some random text before...
@@ -449,29 +428,23 @@ More random text...
             });
         }
 
-        // 🔧 FIX: Более гибкие проверки
         const successfulTests = testResults.filter(r => r.success);
         const failedTests = testResults.filter(r => !r.success);
 
-        // Проверяем что успешных тестов достаточно (не менее 6)
         expect(successfulTests.length).toBeGreaterThanOrEqual(6);
 
-        // 🔧 FIX: Проверяем что неудачи только в ожидаемых тестах
         const expectedFailures = ['empty', 'malformed', 'unstructured', 'singleField'];
         const unexpectedFailures = failedTests.filter(r => !expectedFailures.includes(r.key));
         expect(unexpectedFailures).toHaveLength(0);
 
-        // Все тесты не должны выбрасывать исключения
         expect(testResults.every(r => !r.hasError)).toBe(true);
 
-        // Проверяем что у всех есть корректная структура данных
         testResults.forEach(result => {
             expect(result.confidence).toBeGreaterThanOrEqual(0);
             expect(result.confidence).toBeLessThanOrEqual(1);
             expect(result.fieldsCount).toBeGreaterThanOrEqual(0);
         });
 
-        // 🔧 FIX: Специальные проверки для конкретных тестов
         const twoFieldsResult = testResults.find(r => r.key === 'twoFields');
         expect(twoFieldsResult?.success).toBe(true);
         expect(twoFieldsResult?.fieldsCount).toBe(2);
@@ -480,7 +453,6 @@ More random text...
         expect(threeFieldsResult?.success).toBe(true);
         expect(threeFieldsResult?.fieldsCount).toBe(3);
 
-        // Пустая строка должна не иметь полей
         const emptyResult = testResults.find(r => r.key === 'empty');
         expect(emptyResult?.fieldsCount).toBe(0);
         expect(emptyResult?.success).toBe(false);

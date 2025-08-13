@@ -1,5 +1,3 @@
-// packages/api/src/routes/v1/parsing/parsing.schemas.ts
-
 import { z } from 'zod';
 import { createJsonSchemaFromZod } from "@app/utils/zod/type-to-schema";
 
@@ -9,10 +7,8 @@ export const ParseSalesforceInput = z.object({
         .min(1, "Input cannot be empty")
         .max(10000, "Input too long (max 10000 characters)"),
     config: z.object({
-        // 🔧 FIX: z.coerce для автоматического приведения из string в number
         confidenceThreshold: z.coerce.number().min(0).max(1).optional(),
         fallbackStrategy: z.enum(['flexible', 'strict', 'hybrid']).optional(),
-        // 🔧 FIX: z.coerce для автоматического приведения из string в boolean
         enableCaching: z.coerce.boolean().optional()
     }).optional()
 });
@@ -141,3 +137,161 @@ export const ConfigResponseJsonSchema = createJsonSchemaFromZod(ConfigResponse, 
 export const HealthResponseJsonSchema = createJsonSchemaFromZod(HealthResponse, {
     name: 'HealthResponse'
 });
+
+export const MatchEmployeesInput = z.object({
+    parsedRequirements: z.object({
+        levels: z.array(z.string()).optional(),
+        teamSize: z.number().optional(),
+
+        languageRequirements: z.array(z.object({
+            language: z.string(),
+            level: z.string(),
+            modifier: z.enum(['+', '-']).optional(),
+            priority: z.enum(['required', 'preferred', 'nice-to-have'])
+        })).optional(),
+
+        location: z.object({
+            regions: z.array(z.string()).optional(),
+            workType: z.enum(['Remote', 'Office', 'Hybrid']).optional(),
+            timezone: z.string().optional()
+        }).optional(),
+
+        experience: z.object({
+            minTotalYears: z.number().optional(),
+            leadershipRequired: z.boolean().optional(),
+            roleExperience: z.array(z.object({
+                role: z.string(),
+                years: z.number(),
+                source: z.string().optional(),
+                requirements: z.array(z.string()).optional()
+            })).optional()
+        }).optional(),
+
+        role: z.string().optional(),
+        responsibilities: z.string().optional(),
+        industry: z.string().optional(),
+
+        skills: z.object({
+            required: z.array(z.string()).optional(),
+            preferred: z.array(z.string()).optional()
+        }).optional()
+    }),
+
+    config: z.object({
+        maxResults: z.number().min(1).max(50).optional(),
+        matchingStrategy: z.enum(['strict', 'balanced', 'flexible']).optional()
+    }).optional()
+});
+
+// export const MatchEmployeesJsonSchema = createJsonSchemaFromZod(MatchEmployeesInput, {
+//     name: 'MatchEmployeesInput'
+// });
+
+export const MatchEmployeesJsonSchema = {
+    type: 'object',
+    properties: {
+        parsedRequirements: {
+            type: 'object',
+            properties: {
+                levels: {
+                    type: 'array',
+                    items: { type: 'string' }
+                },
+                teamSize: { type: 'number' },
+                languageRequirements: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            language: { type: 'string' },
+                            level: { type: 'string' },
+                            modifier: { type: 'string', enum: ['+', '-'] },
+                            priority: {
+                                type: 'string',
+                                enum: ['required', 'preferred', 'nice-to-have']
+                            }
+                        },
+                        required: ['language', 'level', 'priority'],
+                        additionalProperties: false
+                    }
+                },
+                location: {
+                    type: 'object',
+                    properties: {
+                        regions: {
+                            type: 'array',
+                            items: { type: 'string' }
+                        },
+                        workType: {
+                            type: 'string',
+                            enum: ['Remote', 'Office', 'Hybrid']
+                        },
+                        timezone: { type: 'string' }
+                    },
+                    additionalProperties: false
+                },
+                experience: {
+                    type: 'object',
+                    properties: {
+                        minTotalYears: { type: 'number' },
+                        leadershipRequired: { type: 'boolean' },
+                        roleExperience: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    role: { type: 'string' },
+                                    years: { type: 'number' },
+                                    source: { type: 'string' },
+                                    requirements: {
+                                        type: 'array',
+                                        items: { type: 'string' }
+                                    }
+                                },
+                                required: ['role', 'years'],
+                                additionalProperties: false
+                            }
+                        }
+                    },
+                    additionalProperties: false
+                },
+                role: { type: 'string' },
+                responsibilities: { type: 'string' },
+                industry: { type: 'string' },
+                skills: {
+                    type: 'object',
+                    properties: {
+                        required: {
+                            type: 'array',
+                            items: { type: 'string' }
+                        },
+                        preferred: {
+                            type: 'array',
+                            items: { type: 'string' }
+                        }
+                    },
+                    additionalProperties: false
+                }
+            },
+            required: ['levels'], // Минимальные требования
+            additionalProperties: false
+        },
+        config: {
+            type: 'object',
+            properties: {
+                maxResults: {
+                    type: 'number',
+                    minimum: 1,
+                    maximum: 50
+                },
+                matchingStrategy: {
+                    type: 'string',
+                    enum: ['strict', 'balanced', 'flexible']
+                }
+            },
+            additionalProperties: false
+        }
+    },
+    required: ['parsedRequirements'],
+    additionalProperties: false
+};

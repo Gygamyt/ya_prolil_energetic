@@ -1,13 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import {
     ParseSalesforceJsonSchema,
-    ParseConfigJsonSchema
+    ParseConfigJsonSchema, MatchEmployeesJsonSchema
 } from './parsing.schemas';
 import {
     parseSalesforceHandler,
     getParsingConfigHandler,
-    getParsingHealthHandler
+    getParsingHealthHandler, matchEmployeesHandler
 } from './parsing.controller';
+import { BaseParser } from "@repo/ai-processing/src/parsers/base.parser";
+import { ZodError } from "zod";
+import { logger } from "@repo/logger/src";
 
 export const parsingRoute: FastifyPluginAsync = async (app) => {
 
@@ -36,7 +39,6 @@ export const parsingRoute: FastifyPluginAsync = async (app) => {
                                         },
                                         data: {
                                             type: 'object',
-                                            // 🔧 FIX: Не детализируем внутреннюю структуру data
                                             additionalProperties: true
                                         },
                                         error: { type: 'string' }
@@ -207,6 +209,136 @@ export const parsingRoute: FastifyPluginAsync = async (app) => {
             return reply.code(500).send({
                 success: false,
                 error: error instanceof Error ? error.message : 'Health check failed'
+            });
+        }
+    });
+    app.get('/cache/stats', {
+        schema: {
+            tags: ['parsing'],
+            summary: 'Get cache statistics',
+            description: 'Get cache performance metrics and usage statistics',
+            response: {
+                200: {
+                    description: 'Cache statistics',
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean' },
+                        cache: {
+                            type: 'object',
+                            additionalProperties: true
+                        }
+                    }
+                }
+            }
+        }
+    }, async (req, reply) => {
+        try {
+            const stats = await BaseParser.getParserCacheStats();
+
+            return reply.code(200).send({
+                success: true,
+                cache: {
+                    type: 'memory',
+                    ...stats,
+                    description: 'In-memory cache for parsing results'
+                }
+            });
+        } catch (error) {
+            return reply.code(500).send({
+                success: false,
+                error: 'Failed to get cache stats'
+            });
+        }
+    });
+
+    // POST /parsing/match-employees
+    app.post('/match-employees', {
+        schema: {
+            body: MatchEmployeesJsonSchema,
+            response: {
+                200: {
+                    description: 'Successfully matched employees against requirements',
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean' },
+                        data: {
+                            type: 'object',
+                            additionalProperties: true
+                        }
+                    }
+                },
+                400: {
+                    description: 'Validation failed',
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean', enum: [false] },
+                        error: { type: 'string' },
+                        details: { type: 'array', items: { type: 'object' } }
+                    }
+                }
+            },
+            tags: ['parsing'],
+            summary: 'Match employees against parsed requirements',
+            description: 'Match employees from database against Salesforce parsed requirements'
+        }
+    }, async (req, reply) => {
+        try {
+
+            const data = await matchEmployeesHandler(req.body);
+
+            return reply.code(200).send({
+                success: true,
+                data
+            });
+        } catch (error) {
+            if (error instanceof ZodError) {
+                logger.error('❌ Validation error:', JSON.stringify(error.errors, null, 2));
+                return reply.code(400).send({
+                    success: false,
+                    error: 'Validation failed',
+                    details: error.errors
+                });
+            }
+
+            // @ts-ignore
+            app.log.error('Employee matching error:', error);
+            return reply.code(500).send({
+                success: false,
+                error: 'Internal matching error',
+                message: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    });
+
+    // DELETE /parsing/cache - очистка кеша
+    app.delete('/cache', {
+        schema: {
+            tags: ['parsing'],
+            summary: 'Clear parsing cache',
+            description: 'Clear all cached parsing results',
+            response: {
+                200: {
+                    description: 'Cache cleared successfully',
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean' },
+                        message: { type: 'string' }
+                    }
+                }
+            }
+        }
+    }, async (req, reply) => {
+        try {
+            await BaseParser.clearParserCache();
+
+            return reply.code(200).send({
+                success: true,
+                message: 'Parser cache cleared successfully'
+            });
+        } catch (error) {
+            return reply.code(500).send({
+                success: false,
+                error: 'Failed to clear cache'
             });
         }
     });

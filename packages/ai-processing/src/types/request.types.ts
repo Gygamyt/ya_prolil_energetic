@@ -1,3 +1,35 @@
+export interface MatchingRequirements {
+    // Основные поля - один в один с ClientRequest
+    levels?: string[];
+    languageRequirements?: LanguageRequirement[];
+    teamSize?: number;
+
+    // Локация - упрощенная версия
+    location?: {
+        regions?: string[];
+        workType?: "Remote" | "Office" | "Hybrid";
+        timezone?: string;
+    };
+
+    // Опыт - ключевые поля для matching
+    experience?: {
+        minTotalYears?: number;
+        leadershipRequired?: boolean;
+        roleExperience?: RoleExperience[];
+    };
+
+    // Дополнительная информация для AI
+    role?: string;
+    responsibilities?: string;
+    industry?: string;
+
+    // Навыки если есть
+    skills?: {
+        required?: string[];
+        preferred?: string[];
+    };
+}
+
 export interface ClientRequest {
     id: string;
 
@@ -79,6 +111,17 @@ export interface ParseResult {
     confidence: number;
     strategy: ParseStrategy;
     extractedFields: string[];
+}
+
+export interface CachedParseResult extends ParseResult {
+    metadata?: {
+        fromCache?: boolean;
+        cacheHit?: boolean;
+        cacheTime?: number;
+        parseTime?: number;
+        totalTime?: number;
+        [key: string]: any; // Для будущих расширений
+    };
 }
 
 export type ParseStrategy = "standard" | "flexible" | "hybrid";

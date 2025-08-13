@@ -1,0 +1,1 @@
+export * from '../providers/memory-cache.provider'

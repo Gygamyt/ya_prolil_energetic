@@ -18,6 +18,7 @@
     "@ai-sdk/google": "^2.0.4",
     "@ai-sdk/openai": "^2.0.10",
     "@repo/shared": "file:../packages/shared",
+    "@repo/cache": "file:../packages/cache",
     "@voltagent/core": "^0.1.79",
     "@voltagent/vercel-ai": "^0.1.18",
     "ai": "^5.0.10",
