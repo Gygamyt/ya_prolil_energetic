@@ -1,6 +1,6 @@
 import { AnalysisService } from './services/analysis.service.js';
-import { DatabaseEmployeeAdapter } from './adapters/database.adapter.js';
 import { logger } from '@repo/logger/src';
+import { DatabaseEmployeeAdapter } from "./adapters/database.adapter";
 
 async function testAnalysisService() {
     try {

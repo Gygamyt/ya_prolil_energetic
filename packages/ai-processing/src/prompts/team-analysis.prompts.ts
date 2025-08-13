@@ -1,4 +1,4 @@
-import { TeamStats } from "../types/analysis.types";
+
 
 export class TeamAnalysisPrompts {
 
