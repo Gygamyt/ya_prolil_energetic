@@ -11,6 +11,7 @@ import { employeesRoute } from "@app/routes/v1/employees/employees.route";
 import { errorHandlerPlugin } from "@app/plugins/error-handler";
 import authMiddleware from "@app/plugins/auth-middleware";
 import { syncRoute } from "@app/routes/v1/sync.route";
+import { parsingRoute } from "@app/routes/v1/parsing/parsing.route";
 
 export async function buildApp() {
     const app = Fastify({
@@ -52,6 +53,7 @@ export async function buildApp() {
     app.register(healthRoute, { prefix: '/health' });
     app.register(employeesRoute, { prefix: '/v1/users' });
     app.register(syncRoute, { prefix: '/v1/sync' });
+    app.register(parsingRoute, { prefix: '/v1/parsing' });
 
     return app;
 }

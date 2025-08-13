@@ -18,67 +18,110 @@ export class StandardParser extends BaseParser {
 
             // 1. Извлекаем уровни разработчиков (поле 6)
             const levels = this.extractLevelsFromSalesforce(input);
-            if (levels.length > 0) {
-                data.levels = levels;
+            if (levels && levels.length > 0) {
+                data.levels = levels; // массив строк
                 extractedFields.push('levels');
             }
 
             // 2. Извлекаем требования к английскому (поле 8)
             const languageRequirements = this.extractLanguageRequirementsFromSalesforce(input);
-            if (languageRequirements.length > 0) {
-                data.languageRequirements = languageRequirements;
+            if (languageRequirements && languageRequirements.length > 0) {
+                // 🔧 FIX: Убедимся что это массив объектов, не строка
+                data.languageRequirements = languageRequirements.map(req => ({
+                    language: req.language,
+                    level: req.level,
+                    modifier: req.modifier,
+                    priority: req.priority
+                }));
                 extractedFields.push('languageRequirements');
             }
 
             // 3. Извлекаем количество сотрудников (поле 12)
             const teamSize = this.extractTeamSizeFromSalesforce(input);
-            if (teamSize !== undefined) {
-                data.teamSize = teamSize;
+            if (teamSize !== undefined && !isNaN(teamSize)) {
+                data.teamSize = Number(teamSize); // 🔧 FIX: явно number
                 extractedFields.push('teamSize');
             }
 
             // 4. Извлекаем локацию (поле 24)
             const location = this.extractLocationFromSalesforce(input);
             if (location) {
-                data.location = location;
+                // 🔧 FIX: Убедимся в правильной структуре
+                data.location = {
+                    regions: location.regions,
+                    workType: location.workType,
+                    timezone: location.timezone,
+                    additionalRequirements: location.additionalRequirements
+                };
                 extractedFields.push('location');
             }
 
             // 5. Извлекаем роль и требования (поля 14, 33)
             const roleAndRequirements = this.extractRoleAndRequirements(input);
             if (roleAndRequirements.role) {
-                data.role = roleAndRequirements.role;
-                data.responsibilities = roleAndRequirements.responsibilities;
+                data.role = String(roleAndRequirements.role);
+                data.responsibilities = String(roleAndRequirements.responsibilities);
                 extractedFields.push('role', 'responsibilities');
             }
 
             // 6. Извлекаем опыт
             const experience = this.extractExperienceFromSalesforce(input);
             if (experience !== undefined) {
-                data.experience = experience;
+                // 🔧 FIX: Правильная структура опыта
+                data.experience = {
+                    minTotalYears: experience.minTotalYears ? Number(experience.minTotalYears) : undefined,
+                    leadershipRequired: Boolean(experience.leadershipRequired),
+                    leadershipYears: experience.leadershipYears ? Number(experience.leadershipYears) : undefined,
+                    roleExperience: experience.roleExperience ? experience.roleExperience.map(re => ({
+                        role: String(re.role),
+                        years: Number(re.years),
+                        source: String(re.source),
+                        requirements: re.requirements ? re.requirements.map(r => String(r)) : undefined
+                    })) : undefined
+                };
                 extractedFields.push('experience');
             }
 
             // 7. Извлекаем метаданные
             const metadata = this.extractMetadata(input);
-            Object.assign(data, metadata);
-            if (metadata.salesManager) extractedFields.push('salesManager');
-            if (metadata.coordinator) extractedFields.push('coordinator');
-            if (metadata.deadline) extractedFields.push('deadline');
-            if (metadata.industry) extractedFields.push('industry');
+            if (metadata.salesManager) {
+                data.salesManager = String(metadata.salesManager);
+                extractedFields.push('salesManager');
+            }
+            if (metadata.coordinator) {
+                data.coordinator = String(metadata.coordinator);
+                extractedFields.push('coordinator');
+            }
+            if (metadata.deadline) {
+                data.deadline = new Date(metadata.deadline);
+                extractedFields.push('deadline');
+            }
+            if (metadata.industry) {
+                data.industry = String(metadata.industry);
+                extractedFields.push('industry');
+            }
 
             // Рассчитываем confidence на основе извлеченных полей
             const confidence = this.calculateConfidence(extractedFields, input);
 
-            return {
+            // 🔧 FIX: Убедимся что возвращаем чистые типы
+            const result: ParseResult = {
                 success: confidence > this.config.confidenceThreshold,
                 data,
-                confidence,
+                confidence: Number(confidence),
                 strategy: 'standard',
-                extractedFields
+                extractedFields: [...extractedFields] // копия массива
             };
 
+            // 🔍 DEBUG: Логирование для отладки
+            console.log('Parse result data:', JSON.stringify(result.data, null, 2));
+            console.log('Language requirements:', result.data?.languageRequirements);
+            console.log('Experience roleExperience:', result.data?.experience?.roleExperience);
+
+            return result;
+
         } catch (error) {
+            console.error('StandardParser error:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown parsing error',
@@ -120,20 +163,34 @@ export class StandardParser extends BaseParser {
 
                 // 🔧 FIX: Для сложных случаев с несколькими языками
                 if (langText.includes(',') || langText.includes('Spanish') || langText.includes('German')) {
-                    return this.parseComplexLanguageRequirements(langText);
+                    const complexResult = this.parseComplexLanguageRequirements(langText);
+                    console.log('Complex language requirements:', complexResult);
+                    return complexResult;
                 }
 
                 // Простой случай "B2"
                 if (/^[ABC][12][\+\-]?$/.test(langText)) {
-                    return [{
+                    // 🔧 FIX: Правильная типизация modifier
+                    let modifier: "+" | "-" | undefined = undefined;
+                    if (langText.includes('+')) {
+                        modifier = '+';
+                    } else if (langText.includes('-')) {
+                        modifier = '-';
+                    }
+
+                    const simpleResult: LanguageRequirement[] = [{
                         language: 'English' as SupportedLanguage,
                         level: langText.replace(/[\+\-]/g, '') as LanguageLevel,
-                        modifier: langText.includes('+') ? '+' : langText.includes('-') ? '-' : undefined,
+                        modifier, // теперь правильный тип
                         priority: 'required' as const
                     }];
+                    console.log('Simple language requirement:', simpleResult);
+                    return simpleResult;
                 }
 
-                return this.extractLanguageRequirements(langText);
+                const fallbackResult = this.extractLanguageRequirements(langText);
+                console.log('Fallback language requirements:', fallbackResult);
+                return fallbackResult;
             }
         }
 
@@ -359,6 +416,8 @@ export class StandardParser extends BaseParser {
     }
 
     private extractRoleExperience(text: string, source: 'field_14' | 'field_33'): RoleExperience[] {
+        console.log('Extracting role experience from:', source, 'Text:', text.substring(0, 100) + '...');
+
         const experiences: RoleExperience[] = [];
 
         // Паттерны для поиска ролей с опытом
@@ -390,15 +449,19 @@ export class StandardParser extends BaseParser {
                 // Извлекаем дополнительные требования из контекста
                 const requirements = this.extractRequirementsFromContext(text, match.index || 0);
 
-                experiences.push({
-                    role,
-                    years,
-                    source,
-                    requirements: requirements.length > 0 ? requirements : undefined
-                });
+                const experience: RoleExperience = {
+                    role: String(role),
+                    years: Number(years),
+                    source: String(source),
+                    requirements: requirements.length > 0 ? requirements.map(r => String(r)) : undefined
+                };
+
+                experiences.push(experience);
+                console.log('Found role experience:', experience);
             }
         });
 
+        console.log('Final role experiences:', experiences);
         return experiences;
     }
 
