@@ -14,6 +14,65 @@ import { logger } from "@repo/logger/src";
 
 export const parsingRoute: FastifyPluginAsync = async (app) => {
 
+    // POST /parsing/match-employees
+    app.post('/match-employees', {
+        schema: {
+            body: MatchEmployeesJsonSchema,
+            response: {
+                200: {
+                    description: 'Successfully matched employees against requirements',
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean' },
+                        data: {
+                            type: 'object',
+                            additionalProperties: true
+                        }
+                    }
+                },
+                400: {
+                    description: 'Validation failed',
+                    type: 'object',
+                    properties: {
+                        success: { type: 'boolean', enum: [false] },
+                        error: { type: 'string' },
+                        details: { type: 'array', items: { type: 'object' } }
+                    }
+                }
+            },
+            tags: ['parsing'],
+            summary: 'Match employees against parsed requirements',
+            description: 'Match employees from database against Salesforce parsed requirements'
+        }
+    }, async (req, reply) => {
+        try {
+
+            const data = await matchEmployeesHandler(req.body);
+
+            return reply.code(200).send({
+                success: true,
+                data
+            });
+        } catch (error) {
+            if (error instanceof ZodError) {
+                logger.error('❌ Validation error:', JSON.stringify(error.errors, null, 2));
+                return reply.code(400).send({
+                    success: false,
+                    error: 'Validation failed',
+                    details: error.errors
+                });
+            }
+
+            // @ts-ignore
+            app.log.error('Employee matching error:', error);
+            return reply.code(500).send({
+                success: false,
+                error: 'Internal matching error',
+                message: error instanceof Error ? error.message : 'Unknown error'
+            });
+        }
+    });
+
     // POST /parsing/salesforce
     app.post('/salesforce', {
         schema: {
@@ -247,65 +306,6 @@ export const parsingRoute: FastifyPluginAsync = async (app) => {
             return reply.code(500).send({
                 success: false,
                 error: 'Failed to get cache stats'
-            });
-        }
-    });
-
-    // POST /parsing/match-employees
-    app.post('/match-employees', {
-        schema: {
-            body: MatchEmployeesJsonSchema,
-            response: {
-                200: {
-                    description: 'Successfully matched employees against requirements',
-                    type: 'object',
-                    properties: {
-                        success: { type: 'boolean' },
-                        data: {
-                            type: 'object',
-                            additionalProperties: true
-                        }
-                    }
-                },
-                400: {
-                    description: 'Validation failed',
-                    type: 'object',
-                    properties: {
-                        success: { type: 'boolean', enum: [false] },
-                        error: { type: 'string' },
-                        details: { type: 'array', items: { type: 'object' } }
-                    }
-                }
-            },
-            tags: ['parsing'],
-            summary: 'Match employees against parsed requirements',
-            description: 'Match employees from database against Salesforce parsed requirements'
-        }
-    }, async (req, reply) => {
-        try {
-
-            const data = await matchEmployeesHandler(req.body);
-
-            return reply.code(200).send({
-                success: true,
-                data
-            });
-        } catch (error) {
-            if (error instanceof ZodError) {
-                logger.error('❌ Validation error:', JSON.stringify(error.errors, null, 2));
-                return reply.code(400).send({
-                    success: false,
-                    error: 'Validation failed',
-                    details: error.errors
-                });
-            }
-
-            // @ts-ignore
-            app.log.error('Employee matching error:', error);
-            return reply.code(500).send({
-                success: false,
-                error: 'Internal matching error',
-                message: error instanceof Error ? error.message : 'Unknown error'
             });
         }
     });

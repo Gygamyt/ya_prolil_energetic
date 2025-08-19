@@ -127,3 +127,7 @@ service-account-key.json
 
 # Changesets
 .changeset/
+
+# Models
+model.nlp
+/packages/nlp-parser/legacy/scripts/debug-requests/

@@ -292,32 +292,39 @@ export class StandardParser extends BaseParser {
     }
 
     private extractRoleAndRequirements(text: string) {
-        const patterns = [
-            /14\.\s*Подробные требования к разработчику\s*\n?([\s\S]*?)(?=\n\d+\.|$)/i,
-            /33\.\s*Первичный запрос\s*\n?([\s\S]*?)(?=\n\d+\.|$)/i
-        ];
-
         let role = '';
         let responsibilities = '';
 
-        for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match) {
-                const requirementText = match[1].trim();
+        // ✅ Извлекаем название роли (первая строка после поля 14)
+        const field14Match = text.match(/14\.\s*Подробные требования к разработчику\s*([^\n\r.]+)/i);
+        if (field14Match) {
+            const firstLine = field14Match[1].trim();
+            role = firstLine.split(/[.,]/)[0].trim();
 
-                const firstLine = requirementText.split('\n')[0];
-                const roleMatch = firstLine.match(/(Senior|Middle|Junior|Lead)?\s*(QA|Quality Assurance|Test|Backend|Frontend|Fullstack|Full-stack|Developer|Engineer)/i);
-                if (roleMatch) {
-                    role = firstLine.trim();
+            // ✅ Для responsibilities берём весь блок - фиксим regex
+            const fullMatch = text.match(/14\.\s*Подробные требования к разработчику\s*([\s\S]*?)(?=\n\d+\.\s|$)/i);
+            if (fullMatch) {
+                responsibilities = fullMatch[1].trim();
+            }
+        }
+
+        // Fallback для поля 33
+        if (!role || !responsibilities) {
+            const field33Match = text.match(/33\.\s*Первичный запрос\s*([\s\S]*?)(?=\n\d+\.\s|$)/i);
+            if (field33Match) {
+                const fullText = field33Match[1].trim();
+                if (!role) {
+                    role = fullText.split(/[.,\n]/)[0].trim();
                 }
-
-                responsibilities = requirementText;
-                break;
+                if (!responsibilities) {
+                    responsibilities = fullText;
+                }
             }
         }
 
         return { role, responsibilities };
     }
+
 
     private extractExperienceFromSalesforce(text: string) {
         const roleExperience: RoleExperience[] = [];

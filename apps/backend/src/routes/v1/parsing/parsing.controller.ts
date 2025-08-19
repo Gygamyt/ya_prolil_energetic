@@ -1,12 +1,9 @@
-// packages/api/src/routes/v1/parsing/parsing.controller.ts
-
 import { ParseSalesforceInput, ParseConfigQuery, MatchEmployeesInput } from './parsing.schemas';
 import type { ParseConfig, ParseStrategy } from "@repo/ai-processing/src/types/request.types";
 import { StandardParser } from "@repo/ai-processing/src/parsers/standard.parser";
 import { getAllEmployeesHandler } from "@app/routes/v1/employees/employees.controller";
 import type { CleanEmployeeObject } from "@repo/database/src/collections/collections";
 
-// Базовая конфигурация парсера
 const defaultConfig: ParseConfig = {
     aiProvider: 'gemini' as const, // 🔧 FIX: as const для типа
     confidenceThreshold: 0.6,
@@ -26,9 +23,8 @@ export const parseSalesforceHandler = async (data: unknown) => {
 
     const parser = new StandardParser(finalConfig);
 
-    // 🚀 FIX: Используем parseWithCache вместо parse
     const startTime = Date.now();
-    const parseResult = await parser.parseWithCache(input.input); // ← Было parse, стало parseWithCache
+    const parseResult = await parser.parseWithCache(input.input);
     const totalTime = Date.now() - startTime;
 
     return {
@@ -38,7 +34,6 @@ export const parseSalesforceHandler = async (data: unknown) => {
             inputLength: input.input.length,
             config: finalConfig,
             timestamp: new Date().toISOString(),
-            // Информация о кешировании из результата
             cached: parseResult.metadata?.fromCache || false,
             cacheHit: parseResult.metadata?.cacheHit || false
         }
@@ -81,13 +76,11 @@ export const getParsingHealthHandler = async () => {
 export const matchEmployeesHandler = async (data: unknown) => {
     const input = MatchEmployeesInput.parse(data);
 
-    // 1. Получаем всех сотрудников из БД
     const employees: CleanEmployeeObject[] = await getAllEmployeesHandler({});
 
     console.log(`📋 Got ${employees.length} employees from database`);
     console.log(`🎯 Matching against requirements:`, JSON.stringify(input.parsedRequirements, null, 2));
 
-    // 2. 🚀 Используем улучшенный алгоритм сопоставления
     const matches = employees.map(employee => {
         const { totalScore, breakdown } = calculateAdvancedScore(employee, input.parsedRequirements);
 
@@ -100,14 +93,12 @@ export const matchEmployeesHandler = async (data: unknown) => {
                 country: employee.Country,
                 city: employee.City,
                 teamLead: employee['Team Lead'],
-                // Основные навыки
                 skills: {
                     'JS/TS': employee['JS, TS'],
                     'Java': employee.Java,
                     'Python': employee.Python,
                     'Testing': employee['Testing Framework']
                 },
-                // Языки
                 languages: {
                     English: employee.English,
                     German: employee.German,
@@ -150,9 +141,6 @@ function generateReasoning(breakdown: any): string {
     return reasons.length > 0 ? reasons.join('\n') : 'Basic compatibility assessment';
 }
 
-// packages/api/src/routes/v1/parsing/parsing.controller.ts
-
-// 🚀 Улучшенная функция подсчета score
 function calculateAdvancedScore(employee: any, requirements: any): {
     totalScore: number;
     breakdown: {
@@ -336,7 +324,7 @@ function extractExperienceFromEmployee(employee: any): number {
     return gradeExperienceMap[employee.Grade] || 3;
 }
 
-function extractLanguagesFromEmployee(employee: any): Array<{language: string, level: string}> {
+function extractLanguagesFromEmployee(employee: any): Array<{ language: string, level: string }> {
     const languages = [];
 
     // Извлекаем языки из схемы (English, German, Polish)
