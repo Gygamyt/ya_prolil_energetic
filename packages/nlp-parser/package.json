@@ -10,6 +10,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@nlpjs/basic": "^5.0.0-alpha.5",
     "@repo/shared": "file:../packages/shared",
     "mammoth": "^1.10.0",
     "node-nlp": "^4.27.0"

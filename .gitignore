@@ -130,4 +130,9 @@ service-account-key.json
 
 # Models
 model.nlp
-/packages/nlp-parser/legacy/scripts/debug-requests/
+/packages/nlp-parser/src/scripts/debug-requests/
+/packages/nlp-parser/src/scripts/output.json
+/packages/nlp-parser/src/data/requests-tmp/
+/packages/nlp-parser/src/data/processed-texts/
+/packages/nlp-parser/src/data/processing-results.json
+/packages/nlp-parser/src/data/summary_stats.json
