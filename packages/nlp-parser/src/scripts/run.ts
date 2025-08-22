@@ -1,5 +1,3 @@
-// run.ts
-
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -37,9 +35,8 @@ async function main() {
     const result = await strategy.parse(input);
     console.log('--- Парсинг завершен ---\n');
 
-    // --- НОВЫЙ БЛОК: СОХРАНЕНИЕ В ФАЙЛ ---
     const outputFilePath = path.join(__dirname, 'output.json');
-    const jsonOutput = JSON.stringify(result, null, 2); // Форматируем JSON для читаемости
+    const jsonOutput = JSON.stringify(result, null, 2);
 
     try {
         fs.writeFileSync(outputFilePath, jsonOutput, 'utf-8');
@@ -48,14 +45,11 @@ async function main() {
         console.error(`Ошибка при сохранении файла: ${outputFilePath}`);
         console.error(error);
     }
-    // --- КОНЕЦ НОВОГО БЛОКА ---
 
-    // Выводим результат в консоль, как и раньше
     console.log('\nРезультат парсинга (в консоли):');
     console.log(jsonOutput);
 }
 
-// Запускаем главную функцию
 main().catch(error => {
     console.error('Произошла непредвиденная ошибка:', error);
 });

@@ -1,38 +1,3 @@
-// export const DOMAINS: string[] = [
-//     'Fintech', 'Финтех',
-//     'Banking', 'Банкинг', 'Банк',
-//     'E-commerce', 'Geo Data',
-//     'Геоданные', 'B2B',
-//     'B2C', 'IT-Asset Management',
-//     'Mobile Device Management',
-//     'PaaS', 'Middleware',
-//     'Messenger', 'Pharmaceutical',
-//     'Cybersecurity',
-//     'Business Analysis',
-//     'Future of Work',
-//     'Automotive',
-//     'Access Management',
-//     'UK payment regulations',
-//     'Customer Experience',
-//     'CX',
-//     'Energy industry',
-//     'Автозаказ',
-//     'Healthcare',
-//     'Gaming',
-//     'Management Simulation', 'Skills Management',
-//     'Workforce Enablement',
-//     'HR Tech',
-//     'SaaS',
-//     'Astrology',
-//     'Астрология', 'Trading',
-//     'Online Trading',
-//     'Finance',
-//     'Финансы', 'Generative AI',
-//     'Торговые системы', 'Investment Business',
-//     'Инвестиционный бизнес',
-//     'Финансовые расчетные системы'
-// ];
-
 export const DOMAINS = {
     finance: [
         'Fintech', 'Финтех',

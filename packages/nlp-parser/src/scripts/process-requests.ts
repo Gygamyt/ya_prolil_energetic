@@ -1,5 +1,3 @@
-// scripts/process-requests.ts
-
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { manager } from '../nlp/nlp-manager';
@@ -9,7 +7,6 @@ import { PrimaryRequirements, PrimaryRequirementsNLPExtractor } from "../extract
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- Конфигурация ---
 const INPUT_DIR = path.resolve(__dirname, '../data/requests-tmp');
 const OUTPUT_JSON_PATH = path.resolve(__dirname, '../data/processing-results.json');
 const OUTPUT_TEXTS_DIR = path.resolve(__dirname, '../data/processed-texts');
@@ -24,18 +21,25 @@ interface ProcessedResult {
     error?: string;
 }
 
+function logSection(title: string) {
+    console.log(`\n=== ${title} ===`);
+}
+
+function logEntity(category: string, raw: string, canonical: string) {
+    const mark = raw !== canonical ? "⚠️" : "✓";
+    console.log(`[ENTITY] RAW="${raw}" → canonical="${canonical}" [${category}] ${mark}`);
+}
+
 /**
  * Главная функция скрипта
  */
 async function main() {
-    // ↓↓↓ ИЗМЕНЕНИЕ 1: ЗАПУСКАЕМ ТАЙМЕР ↓↓↓
     const startTime = process.hrtime();
     console.log('Начинаем пакетную обработку заявок...');
 
     const allResults: ProcessedResult[] = [];
 
     try {
-        // ... (очистка директорий и обучение модели) ...
         await fs.rm(OUTPUT_JSON_PATH, { force: true });
         await fs.rm(OUTPUT_TEXTS_DIR, { recursive: true, force: true });
         await fs.mkdir(OUTPUT_TEXTS_DIR, { recursive: true });
@@ -55,10 +59,9 @@ async function main() {
         }
         console.log(`Найдено для обработки: ${requestFiles.length} файлов.`);
 
-        // ... (цикл обработки файлов) ...
         for (const fileName of requestFiles) {
+            logSection(`Файл: ${fileName}`);
             const filePath = path.join(INPUT_DIR, fileName);
-            console.log(`> Обработка файла: ${fileName}`);
 
             const fileContent = await fs.readFile(filePath, 'utf-8');
             const match = fileContent.match(FIELD_14_PATTERN);
@@ -75,8 +78,43 @@ async function main() {
             const textToProcess = rawField14Text.trim();
 
             try {
+                console.log('  🔎 Анализируем текст поля 14:');
+                console.log('  ------------------------------------');
+                console.log(textToProcess.substring(0, 400));
+                console.log('  ------------------------------------');
+
                 const extractionResult = await extractor.extract(textToProcess);
                 const status = extractionResult.value ? 'success' : 'no_entities_found';
+
+                if (extractionResult.value) {
+                    console.log(`  -> Найдено сущностей:`);
+
+                    for (const tech of extractionResult.value.technologies) {
+                        logEntity("technology", tech, tech);
+                    }
+                    for (const plat of extractionResult.value.platforms) {
+                        logEntity("platform", plat, plat);
+                    }
+                    for (const skill of extractionResult.value.skills) {
+                        logEntity("skill", skill, skill);
+                    }
+                    for (const domain of extractionResult.value.domains) {
+                        logEntity("domain", domain, domain);
+                    }
+                    for (const role of extractionResult.value.roles) {
+                        logEntity("role", role, role);
+                    }
+
+                    console.log('--- Итоговое сгруппированное извлечение ---');
+                    console.log(`     Технологии: ${extractionResult.value.technologies.join(', ') || "-"}`);
+                    console.log(`     Платформы:  ${extractionResult.value.platforms.join(', ') || "-"}`);
+                    console.log(`     Навыки:     ${extractionResult.value.skills.join(', ') || "-"}`);
+                    console.log(`     Домены:     ${extractionResult.value.domains.join(', ') || "-"}`);
+                    console.log(`     Роли:       ${extractionResult.value.roles.join(', ') || "-"}`);
+                } else {
+                    console.log(`  -> Для ${fileName} не найдено сущностей.`);
+                }
+
                 allResults.push({
                     sourceFile: fileName,
                     status,
@@ -84,6 +122,7 @@ async function main() {
                     data: extractionResult.value as PrimaryRequirements,
                 });
             } catch (e) {
+                console.error(`  -> Ошибка при обработке ${fileName}:`, e);
                 allResults.push({
                     sourceFile: fileName,
                     status: 'error',
@@ -96,8 +135,7 @@ async function main() {
 
         await fs.writeFile(OUTPUT_JSON_PATH, JSON.stringify(allResults, null, 2), 'utf-8');
 
-        // ↓↓↓ ИЗМЕНЕНИЕ 2: ОСТАНАВЛИВАЕМ ТАЙМЕР И СЧИТАЕМ СТАТИСТИКУ ↓↓↓
-        const elapsed = process.hrtime(startTime);
+        const elapsed: [number, number] = process.hrtime(startTime);
         const elapsedSeconds = elapsed[0] + elapsed[1] / 1e9;
         const processedCount = allResults.length;
         const averageTime = processedCount > 0 ? elapsedSeconds / processedCount : 0;

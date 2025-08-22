@@ -79,15 +79,12 @@ export class LanguageExtractor extends SimpleExtractor {
     }
 
     private parseLevelAndModifier(text: string, language: SupportedLanguage, priority: 'required' | 'preferred'): LanguageRequirement | null {
-        // Шаг 1: Найти модификатор в оригинальном тексте, ДО его нормализации.
         const modifierMatch = text.match(/([+-])/);
         const modifier = modifierMatch ? (modifierMatch[1] as '+' | '-') : undefined;
 
-        // Шаг 2: Теперь нормализовать текст для поиска уровня, убирая всё лишнее.
         const normalizedText = text.toLowerCase().replace(/[\s,()-]/g, '');
         if (!normalizedText) return null;
 
-        // Шаг 3: Найти уровень в полностью очищенном тексте.
         const level = this.findValue(normalizedText, LanguageExtractor.SORTED_LEVEL_ALIASES);
         if (!level) return null;
 
@@ -106,7 +103,6 @@ export class LanguageExtractor extends SimpleExtractor {
 
     private findValue<T>(text: string, sortedAliases: [string, T][]): T | undefined {
         for (const [alias, value] of sortedAliases) {
-            // Нормализуем псевдоним так же, как и входной текст, для точного совпадения.
             const normalizedAlias = alias.toLowerCase().replace(/[\s,()-]/g, '');
             if (text.includes(normalizedAlias)) {
                 return value;

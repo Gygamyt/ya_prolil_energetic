@@ -1,5 +1,3 @@
-// scripts/analyze-results.ts
-
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -7,11 +5,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --- Конфигурация ---
 const INPUT_FILE_PATH = path.resolve(__dirname, '../data/processing-results.json');
 const OUTPUT_FILE_PATH = path.resolve(__dirname, '../data/summary_stats.json');
 
-// --- Типы для удобства ---
 interface ProcessedResult {
     sourceFile: string;
     status: 'success' | 'no_entities_found' | 'error';
@@ -45,11 +41,9 @@ async function main() {
     console.log(`Начинаем анализ файла: ${INPUT_FILE_PATH}`);
 
     try {
-        // 1. Читаем JSON с результатами обработки
         const fileContent = await fs.readFile(INPUT_FILE_PATH, 'utf-8');
         const results: ProcessedResult[] = JSON.parse(fileContent);
 
-        // 2. Инициализируем счетчики
         const counters = {
             technologies: new Map<string, number>(),
             platforms: new Map<string, number>(),
@@ -58,7 +52,6 @@ async function main() {
             roles: new Map<string, number>(),
         };
 
-        // Считаем только те заявки, где были найдены сущности
         const validEntries = results.filter(r => r.status === 'success' && r.data);
         const totalProcessedCount = validEntries.length;
 
@@ -67,7 +60,6 @@ async function main() {
             return;
         }
 
-        // 3. Проходим по всем заявкам и считаем сущности
         for (const entry of validEntries) {
             if (entry.data) {
                 for (const key in counters) {
@@ -80,7 +72,6 @@ async function main() {
             }
         }
 
-        // 4. Формируем итоговый объект со статистикой
         const summary: Summary = {
             totalProcessedRequests: totalProcessedCount,
             technologies: {}, platforms: {}, skills: {}, domains: {}, roles: {},
@@ -98,7 +89,6 @@ async function main() {
             }
         }
 
-        // 5. Сохраняем статистику в новый JSON-файл
         await fs.writeFile(OUTPUT_FILE_PATH, JSON.stringify(summary, null, 2), 'utf-8');
 
         console.log(`\n🎉 Анализ завершен!`);

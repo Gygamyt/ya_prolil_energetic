@@ -18,7 +18,6 @@ export class MissingDataHandler extends BaseExtractor {
         const missing: Record<string, any> = {};
         const numberedList = context.numberedList;
 
-        // Define expected field mappings
         const fieldMappings: Record<number, string> = {
             1: 'industry',
             2: 'domain',
@@ -45,7 +44,6 @@ export class MissingDataHandler extends BaseExtractor {
             35: 'vendorExperience',
         };
 
-        // Check for missing items
         for (const [itemNum, fieldName] of Object.entries(fieldMappings)) {
             const num = parseInt(itemNum);
             const value = numberedList[num];
@@ -55,7 +53,6 @@ export class MissingDataHandler extends BaseExtractor {
             }
         }
 
-        // Add missing numbered items that don't exist at all
         const existingNums = Object.keys(numberedList).map(Number);
         const expectedNums = Object.keys(fieldMappings).map(Number);
 

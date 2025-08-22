@@ -123,11 +123,8 @@ export class PatternMatcher {
     static extractMetaInfo(cvLine: string): Record<string, string> {
         const meta: Record<string, string> = {};
 
-        // Убираем лишние пробелы и нормализуем
         const normalized = cvLine.replace(/\s+/g, ' ').trim();
 
-        // Пробуем разные форматы:
-        // Format 1: CV - Role - Tech - Company - Manager - ID
         let cvMatch = normalized.match(/^CV\s*-\s*([^-]*)\s*-\s*([^-]*)\s*-\s*([^-]*)\s*-\s*([^-]*)\s*-\s*(.*)$/);
 
         if (cvMatch) {

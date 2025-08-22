@@ -1,16 +1,3 @@
-// export const PLATFORMS: string[] = [
-//     'PC', 'Windows', 'Linux', 'macOS', 'iOS', 'Android',
-//     'Xbox', 'PlayStation', 'PS4', 'PS5', 'Nintendo Switch', 'Mobile',
-//     'Web',
-//     'Raspberry Pi', 'Mac',
-//     'macOS',
-//     'Windows', 'Unix',
-//     'VDI', 'Mainframe',
-//     'z/OS'
-// ];
-
-// src/nlp-data/entities/platforms.ts
-
 export const PLATFORMS = {
     desktop_os: [
         'Windows',
@@ -39,7 +26,7 @@ export const PLATFORMS = {
     enterprise: [
         'Mainframe',
         'z/OS',
-        'VDI' // Virtual Desktop Infrastructure
+        'VDI'
     ]
 };
 

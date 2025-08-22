@@ -1,8 +1,6 @@
-// src/extractors/PrimaryRequirementsNLPExtractor.ts
-
 import { ComplexExtractor, ExtractorContext, ExtractionResult } from './base-extractor';
 import { processText } from '../nlp/nlp-manager';
-
+import {shouldKeepEntity} from "../nlp/utils/confusion-filter";
 
 export interface PrimaryRequirements {
     technologies: string[];
@@ -32,10 +30,17 @@ export class PrimaryRequirementsNLPExtractor extends ComplexExtractor {
             technologies: [], platforms: [], skills: [], domains: [], roles: [],
         };
 
-        // ↓↓↓ ИЗМЕНЕНИЕ 2: УПРОЩАЕМ ЛОГИКУ СБОРКИ ↓↓↓
         for (const entity of nlpResult.entities) {
-            // Мы берем только каноничное имя (entity.option) и полностью игнорируем категорию (entity.alias)
             const value: string = entity.option;
+
+            if (value === "TestNG") {
+                const check = shouldKeepEntity("TestNG", ["test", "testing", "tester"], textToProcess);
+                if (!check.allow) {
+                    console.log(check.reason);
+                    continue; // не добавляем в технологии
+                }
+            }
+
 
             switch (entity.entity) {
                 case 'technology': requirements.technologies.push(value); break;
@@ -46,7 +51,6 @@ export class PrimaryRequirementsNLPExtractor extends ComplexExtractor {
             }
         }
 
-        // ↓↓↓ ИЗМЕНЕНИЕ 3: УДАЛЯЕМ ДУБЛИКАТЫ С ПОМОЩЬЮ SET ↓↓↓
         for (const key in requirements) {
             const prop = key as keyof PrimaryRequirements;
             requirements[prop] = [...new Set(requirements[prop])];

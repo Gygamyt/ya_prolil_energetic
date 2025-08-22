@@ -6,7 +6,7 @@ export class TextNormalizer {
      * Normalize input text for consistent parsing
      */
     static normalize(text: string): string {
-        if (!text || typeof text !== 'string') {
+        if (!text) {
             return '';
         }
 
@@ -22,10 +22,10 @@ export class TextNormalizer {
             .replace(/\n\s*\n\s*\n/g, '\n\n')
             // Clean up bullet points and numbers
             .replace(/^\s*[•·▪▫-]\s*/gm, '- ')
-            .replace(/^\s*(\d+)[\.\)]\s*/gm, '$1. ')
+            .replace(/^\s*(\d+)[.)]\s*/gm, '$1. ')
             // Normalize quotes and dashes
-            .replace(/[""]/g, '"')
-            .replace(/['']/g, "'")
+            .replace(/"/g, '"')
+            .replace(/'/g, "'")
             .replace(/—/g, '-')
             .replace(/–/g, '-')
             // Trim each line

@@ -28,7 +28,6 @@ export class SectionSplitter {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
 
-            // Detect meta info (CV line + URL)
             if (currentSection === 'meta') {
                 let metaLines: string[] = [];
                 for (let i = 0; i < Math.min(4, lines.length); i++) {
@@ -36,25 +35,22 @@ export class SectionSplitter {
                     if (line.startsWith('CV -') || line.includes('salesforce.com') || line.includes('https://')) {
                         metaLines.push(line);
                     } else {
-                        break; // Мета информация закончилась
+                        break;
                     }
                 }
 
                 result.metaInfo = metaLines.join('\n');
 
-                // Check for "Описание" marker
                 if (line.toLowerCase().includes('описание')) {
                     currentSection = 'description';
                     continue;
                 }
 
-                // If we hit numbered list without description, switch directly
                 if (/^\d+\.\s/.test(line)) {
                     currentSection = 'list';
                 }
             }
 
-            // Collect description text
             if (currentSection === 'description') {
                 if (/^\d+\.\s/.test(line)) {
                     currentSection = 'list';
@@ -64,12 +60,10 @@ export class SectionSplitter {
                 }
             }
 
-            // Parse numbered list items
             if (currentSection === 'list') {
                 const match = line.match(/^(\d+)\.\s*(.*)$/);
                 if (match) {
                     const number = parseInt(match[1]);
-                    // Handle multiline items
                     let fullContent = match[2].trim();
                     let j = i + 1;
                     while (j < lines.length && !/^\d+\.\s/.test(lines[j].trim())) {
@@ -81,7 +75,7 @@ export class SectionSplitter {
                     }
 
                     result.numberedList[number] = fullContent;
-                    i = j - 1; // Skip processed lines
+                    i = j - 1;
                 }
             }
         }

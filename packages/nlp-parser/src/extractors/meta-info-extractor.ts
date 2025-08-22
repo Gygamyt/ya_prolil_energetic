@@ -8,7 +8,7 @@ export class MetaInfoExtractor extends SimpleExtractor {
     fieldName = 'metaInfo';
 
     constructor() {
-        super(0.9); // High confidence required for meta info
+        super(0.9);
     }
 
     async extract(text: string, context?: ExtractorContext): Promise<ExtractionResult> {
@@ -38,31 +38,26 @@ export class MetaInfoExtractor extends SimpleExtractor {
             });
         }
 
-        // Extract structural patterns
         const patterns = PatternMatcher.findAll(text);
 
-        // Request IDs
         if (patterns.requestId && patterns.requestId.length > 0) {
             metaInfo.requestId = patterns.requestId[0].value;
             totalConfidence += patterns.requestId[0].confidence;
             foundItems++;
         }
 
-        // Salesforce URLs
         if (patterns.salesforceUrl && patterns.salesforceUrl.length > 0) {
             metaInfo.salesforceUrl = patterns.salesforceUrl[0].value;
             totalConfidence += patterns.salesforceUrl[0].confidence;
             foundItems++;
         }
 
-        // CV IDs
         if (patterns.cvId && patterns.cvId.length > 0) {
             metaInfo.cvId = patterns.cvId[0].value;
             totalConfidence += patterns.cvId[0].confidence;
             foundItems++;
         }
 
-        // Dates
         const dates = PatternMatcher.extractDates(text);
         if (dates.length > 0) {
             metaInfo.dates = dates;

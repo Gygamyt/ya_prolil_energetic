@@ -1,5 +1,3 @@
-// src/nlp-data/index.ts
-
 import { ROLES, PLATFORMS, SKILLS, TECHNOLOGIES, DOMAINS } from './entities';
 
 interface NlpEntityOption {
@@ -14,10 +12,27 @@ interface NlpEntity {
     options: NlpEntityOption[];
 }
 
+const SPECIAL_TECH_SYNONYMS = {
+    'TestNG': ['TestNG', 'testng'],
+    'JUnit': ['JUnit', 'junit'],
+    'nUnit': ['nUnit', 'nunit'],
+    'xUnit': ['xUnit', 'xunit'],
+    'Mocha': ['Mocha', 'mocha'],
+    'Chai': ['Chai', 'chai'],
+    'Jest': ['Jest', 'jest'],
+    'PyTest': ['PyTest', 'pytest'],
+    'CodeceptJS': ['CodeceptJS', 'codeceptjs'],
+    'Selenide': ['Selenide', 'selenide'],
+    'Robot Framework': ['Robot Framework', 'robot framework', 'robotframework'],
+    'TestComplete': ['TestComplete', 'testcomplete'],
+    'Cucumber': ['Cucumber', 'cucumber'],
+    'Gherkin': ['Gherkin', 'gherkin']
+    // можно добавить другие при необходимости
+};
+
 function createOptions(categories: Record<string, string[]>): NlpEntityOption[] {
     const options: NlpEntityOption[] = [];
 
-    // ↓↓↓ ИЗМЕНЕНИЕ 1: РАСШИРЯЕМ КАРТУ КАНОНИЧНЫХ ИМЕН ↓↓↓
     const canonicalMap: Record<string, string> = {
         'банк': 'Banking',
         'банкинг': 'Banking',
@@ -26,7 +41,7 @@ function createOptions(categories: Record<string, string[]>): NlpEntityOption[] 
         'ООП': 'OOP',
         'rest': 'REST API',
         'mq': 'Message Queues',
-        'микросервисы': 'Microservices',
+        'микросервисы': 'Microservices'
     };
 
     for (const categoryName in categories) {
@@ -34,31 +49,33 @@ function createOptions(categories: Record<string, string[]>): NlpEntityOption[] 
 
         for (const keyword of keywords) {
             const lowerKeyword = keyword.toLowerCase();
-            // Используем карту для определения каноничного имени
             const canonicalName = canonicalMap[lowerKeyword] || keyword;
 
             let option = options.find(o => o.name === canonicalName);
             if (!option) {
+                // @ts-ignore
+                const manualSynonyms = SPECIAL_TECH_SYNONYMS[canonicalName];
                 option = {
                     name: canonicalName,
                     alias: categoryName,
-                    synonyms: [canonicalName, canonicalName.toLowerCase()],
+                    synonyms: manualSynonyms
+                        ? [...manualSynonyms]
+                        : [canonicalName, canonicalName.toLowerCase()]
                 };
                 options.push(option);
+                console.log(`Special synonyms for ${canonicalName}:`, manualSynonyms);
+                if (manualSynonyms) continue;
             }
 
-            // Добавляем текущее слово в синонимы
             option.synonyms.push(lowerKeyword);
 
-            // ↓↓↓ ИЗМЕНЕНИЕ 2: ДОБАВЛЯЕМ КОНКРЕТНЫЕ ПРАВИЛА ДЛЯ СИНОНИМОВ ↓↓↓
             if (canonicalName === 'Microservices') {
-                option.synonyms.push('микросервисной'); // Добавляем падеж
+                option.synonyms.push('микросервисной');
             }
             if (canonicalName === 'REST API') {
-                option.synonyms.push('rest'); // Добавляем короткую форму
+                option.synonyms.push('rest');
             }
 
-            // Общая логика для русских падежей
             if (/[а-я]$/.test(lowerKeyword)) {
                 option.synonyms.push(lowerKeyword + 'а');
                 option.synonyms.push(lowerKeyword + 'е');
@@ -68,8 +85,18 @@ function createOptions(categories: Record<string, string[]>): NlpEntityOption[] 
     }
 
     options.forEach(opt => (opt.synonyms = [...new Set(opt.synonyms)]));
+    //todo add optional logging
+
+    // options.forEach(opt => {
+    //     opt.synonyms = [...new Set(opt.synonyms)];
+    //     if (opt.name === 'TestNG') {
+    //         console.log(`Synonyms for TestNG after deduplication:`, opt.synonyms);
+    //     }
+    // });
+
     return options;
 }
+
 const nlpEntities: NlpEntity[] = [
     { name: 'technology', languages: ['ru', 'en'], options: createOptions(TECHNOLOGIES) },
     { name: 'platform', languages: ['ru', 'en'], options: createOptions(PLATFORMS) },
